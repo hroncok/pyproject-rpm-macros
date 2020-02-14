@@ -11,7 +11,10 @@ BuildArch:      noarch
 BuildRequires:  pyproject-rpm-macros
 
 %description
-%{summary}.
+A Python package containing executables.
+Building this tests:
+- there are no bytecompiled files in %%{_bindir}
+- the executable's shebang is adjusted properly
 
 %prep
 %autosetup -n %{name}-%{version}
@@ -24,16 +27,15 @@ BuildRequires:  pyproject-rpm-macros
 
 %install
 %pyproject_install
+%pyproject_save_files tldr +bindir
 
 %check
 test ! -d %{buildroot}%{_bindir}/__pycache__
+
+# tests if we get a proper shebang line
 head -n1 %{buildroot}%{_bindir}/%{name}.py | egrep '#!\s*%{python3}\s+%{py3_shbang_opts}\s*$'
 
-%files
+%files -f %pyproject_files
 %license LICENSE
 %doc README.md
-%{_bindir}/%{name}
-%{_bindir}/%{name}.py
-%{python3_sitelib}/%{name}.py
-%{python3_sitelib}/__pycache__/*.pyc
-%{python3_sitelib}/%{name}-%{version}.dist-info/
+

@@ -7,15 +7,25 @@ License:        MIT
 # Keep the version at zero and increment only release
 Version:        0
 Release:        13%{?dist}
-
 Source0:        macros.pyproject
 Source1:        pyproject_buildrequires.py
+Source2:        generate_file_section.py
+Source3:        test_generate_file_section.py
+Source4:        classify_paths_output.py
+
 
 Source8:        README.md
 Source9:        LICENSE
 
 Source10:       test_pyproject_buildrequires.py
 Source11:       testcases.yaml
+
+Source12:       test_RECORD_kerberos
+Source13:       test_RECORD_requests
+Source14:       test_RECORD_tensorflow
+Source15:       test_RECORD_tldr
+Source16:       test_RECORD_mistune
+
 
 URL:            https://src.fedoraproject.org/rpms/pyproject-rpm-macros
 
@@ -72,7 +82,7 @@ mkdir -p %{buildroot}%{_rpmmacrodir}
 mkdir -p %{buildroot}%{_rpmconfigdir}/redhat
 install -m 644 macros.pyproject %{buildroot}%{_rpmmacrodir}/
 install -m 644 pyproject_buildrequires.py %{buildroot}%{_rpmconfigdir}/redhat/
-
+install -m 644 generate_file_section.py  %{buildroot}%{_rpmconfigdir}/redhat/
 %if %{with tests}
 %check
 %{__python3} -m pytest -vv
@@ -82,11 +92,14 @@ install -m 644 pyproject_buildrequires.py %{buildroot}%{_rpmconfigdir}/redhat/
 %files
 %{_rpmmacrodir}/macros.pyproject
 %{_rpmconfigdir}/redhat/pyproject_buildrequires.py
-
+%{_rpmconfigdir}/redhat/generate_file_section.py
 %doc README.md
 %license LICENSE
 
 %changelog
+* Mon Feb 17 2020 Patrik Kopkan <pkopkan@redhat.com> - 0-13
+- add %pyproject_save_file macro for generating file section
+
 * Mon Mar 02 2020 Miro Hrončok <mhroncok@redhat.com> - 0-13
 - Tox dependency generator: Handle deps read in from a text file (#1808601)
 

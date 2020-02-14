@@ -130,6 +130,53 @@ in `%generate_buildrequires`. If not, you need to add:
 
     BuildRequires: python3dist(tox-current-env)
 
+
+Generating the %files section
+-----------------------------
+
+To generate the list of files in the `%files` section, you can use `%pyproject_save_files` after the `%pyproject_install` macro.
+It takes toplevel module names (i.e. the names used with `import` in Python) and stores paths for those modules and metadata for the package (dist-info directory) to a file stored at `%{pyproject_files}`.
+For example, if a package provides the modules `requests` and `_requests`, write:
+
+    %install
+    %pyproject_install
+    %pyproject_save_files requests _requests
+
+To add listed files to the `%files` section, use `%files -f %{pyproject_files}`.
+Note that you still need to add any documentation and license manually (for now).
+
+    %files -n python3-requests -f %{pyproject_files}
+    %doc README.rst
+    %license LICENSE
+
+You can use globs in the module names if listing them explicitly would be too tedious:
+
+    %install
+    %pyproject_install
+    %pyproject_save_files *requests
+
+In fully automated environmets, you can use the `*` glob to include all modules. In Fedora however, you should always use a more specific glob to avoid accidentally packaging unwanted files (for example, a top level module named `test`).
+
+Speaking about automated environments, it is possible to also list all executables in `/usr/bin` by adding a special `+bindir` argument.
+
+    %install
+    %pyproject_install
+    %pyproject_save_files * +bindir
+    
+    %files -n python3-requests -f %{pyproject_files}
+
+However, in Fedora packages, always list executables explicitly to avoid unintended collisions with other packages or accidental missing executables:
+
+    %install
+    %pyproject_install
+    %pyproject_save_files requests _requests
+    
+    %files -n python3-requests -f %{pyproject_files}
+    %doc README.rst
+    %license LICENSE
+    %{_bindir}/downloader
+
+
 Limitations
 -----------
 

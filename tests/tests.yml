@@ -31,6 +31,18 @@
     - openqa_client:
         dir: .
         run: ./mocktest.sh python-openqa_client
+    - kerberos:
+        dir: .
+        run: ./mocktest.sh python-kerberos
+    - ldap:
+        dir: .
+        run: ./mocktest.sh python-ldap
+    - isort:
+        dir: .
+        run: ./mocktest.sh python-isort
+    - mistune:
+        dir: .
+        run: ./mocktest.sh python-kerberos
     required_packages:
     - mock
     - rpmdevtools

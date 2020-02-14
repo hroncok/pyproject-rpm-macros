@@ -11,7 +11,10 @@ BuildArch:      noarch
 BuildRequires:  pyproject-rpm-macros
 
 %description
-Discover and load entry points from installed packages.
+This package contains one .py module
+Building this tests:
+- the flit build backend
+- the %%{python3_sitelib}/__pycache__ directory is not listed in %%pyproject_files
 
 
 %package -n python3-%{pypi_name}
@@ -19,8 +22,7 @@ Summary:        %{summary}
 %{?python_provide:%python_provide python3-%{pypi_name}}
 
 %description -n python3-%{pypi_name}
-Discover and load entry points from installed packages.
-
+%{summary}.
 
 %prep
 %autosetup -p1 -n %{pypi_name}-%{version}
@@ -28,6 +30,7 @@ Discover and load entry points from installed packages.
 
 %generate_buildrequires
 %pyproject_buildrequires
+%pyproject_save_files entrypoints
 
 
 %build
@@ -38,9 +41,6 @@ Discover and load entry points from installed packages.
 %pyproject_install
 
 
-%files -n python3-%{pypi_name}
+%files -n python3-%{pypi_name} -f %{pyproject_files}
 %doc README.rst
 %license LICENSE
-%{python3_sitelib}/entrypoints-*.dist-info/
-%{python3_sitelib}/entrypoints.py
-%{python3_sitelib}/__pycache__/entrypoints.*

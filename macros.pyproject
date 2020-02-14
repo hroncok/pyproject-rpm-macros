@@ -1,5 +1,7 @@
 %_pyproject_wheeldir ./pyproject-macros-wheeldir
 
+%pyproject_files %{_builddir}/pyproject-files
+
 %pyproject_wheel() %{expand:\\\
 CFLAGS="${CFLAGS:-${RPM_OPT_FLAGS}}" LDFLAGS="${LDFLAGS:-${RPM_LD_FLAGS}}" \\\
 %{__python3} -m pip wheel --wheel-dir %{_pyproject_wheeldir} --no-deps --use-pep517 --no-build-isolation --disable-pip-version-check --progress-bar off --verbose .
@@ -40,4 +42,8 @@ TOX_TESTENV_PASSENV="${TOX_TESTENV_PASSENV:-*}" \\
 PATH="%{buildroot}%{_bindir}:$PATH" \\
 PYTHONPATH="${PYTHONPATH:-%{buildroot}%{python3_sitearch}:%{buildroot}%{python3_sitelib}}" \\
 tox --current-env -q --recreate -e "%{-e:%{-e*}}%{!-e:%{toxenv}}" %{?*}
+}
+
+%pyproject_save_files() %{expand:\\\
+%{__python3} %{_rpmconfigdir}/redhat/generate_file_section.py %{pyproject_files} %{buildroot} %{python3_sitelib} %{python3_sitearch} %{_bindir} %{*}
 }
