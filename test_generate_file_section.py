@@ -260,8 +260,9 @@ def test_generate_file_list(package, glob, expected):
     """test glob at output of classify_paths"""
     paths_dict = PARAMETRIZED_EXPECTED_OUTPUT[package]
     modules_glob = (glob,)
-
-    tested = generate_file_list(paths_dict, modules_glob)
+    record_path = TEST_RECORDS[package][0]
+    tested = generate_file_list(record_path, "/usr/lib/python3.7/site-packages",
+                                "/usr/lib64/python3.7/site-packages", paths_dict, modules_glob, False)
 
     assert tested == expected
 
@@ -273,8 +274,10 @@ def test_generate_file_list_with_executables(package, glob, expected):
     executables = PARAMETRIZED_EXPECTED_OUTPUT[package]["executables"]["files"]
     modules_glob = (glob,)
     files = sorted(expected + executables)
-    tested = generate_file_list(paths_dict, modules_glob, include_executables=True)
-
+    record_path = TEST_RECORDS[package][0]
+    tested = generate_file_list(record_path, "/usr/lib/python3.7/site-packages",
+                                "/usr/lib64/python3.7/site-packages", paths_dict, modules_glob,
+                                include_executables=True)
     assert tested == files
 
 

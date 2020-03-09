@@ -4,8 +4,10 @@ import fnmatch
 import os
 import re
 from pathlib import Path
+from pathlib import PurePath
 from pprint import pformat
 from warnings import warn
+import sys
 
 
 def delete_commonpath(longer_path, prefix):
@@ -88,7 +90,8 @@ def find_script(python3_sitedir, parsed_record_content):
     pycache = []
     for script in scripts:
         filename = delete_commonpath(script, python3_sitedir)[:-(len('.py'))]  # without suffix
-        pycache.extend(pattern_filter(f"{re.escape(python3_sitedir)}/__pycache__/{filename}.*\\.pyc", parsed_record_content))
+        pycache.extend(pattern_filter(f"{re.escape(python3_sitedir)}/__pycache__/{filename}.*\\.pyc",
+                                      parsed_record_content))
 
     return scripts, pycache
 
@@ -163,17 +166,23 @@ def get_modules(packages, extension_files, scripts):
     return modules
 
 
-def classify_paths(record_path, parsed_record_content, python3_sitelib, python3_sitearch, bindir):
-    """return dict with logical representation of files"""
-
+def get_modules_directory(record_path, python3_sitelib, python3_sitearch):
+    """find out directory where modules should be located"""
     if os.path.commonpath((python3_sitelib, record_path)) == python3_sitelib:
-        python3_sitedir = python3_sitelib
+        modules_dir = python3_sitelib
     elif os.path.commonpath((python3_sitearch, record_path)) == python3_sitearch:
-        python3_sitedir = python3_sitearch
+        modules_dir = python3_sitearch
     else:
         assert False, f"""python3_sitelib: {python3_sitelib} or python3_sitearch: {python3_sitearch} does not
         contain RECORD file: {record_path}"""
 
+    return modules_dir
+
+
+def classify_paths(record_path, parsed_record_content, python3_sitelib, python3_sitearch, bindir):
+    """return dict with logical representation of files"""
+
+    python3_sitedir = get_modules_directory(record_path, python3_sitelib, python3_sitearch)
     packages, package_files = find_package(python3_sitelib, python3_sitearch, parsed_record_content)
     for file in package_files:
         parsed_record_content.remove(file)
@@ -215,7 +224,8 @@ def classify_paths(record_path, parsed_record_content, python3_sitelib, python3_
     return paths
 
 
-def generate_file_list(paths_dict, modules_glob, include_executables=False):
+def generate_file_list(record_path, python3_sitelib, python3_sitearch, paths_dict, modules_glob,
+                       include_executables=False):
     """generated list of files to be added to specfile %file"""
     paths = set(paths_dict["executables"]["files"]) if include_executables else set()
     modules = paths_dict["modules"]
@@ -226,12 +236,13 @@ def generate_file_list(paths_dict, modules_glob, include_executables=False):
                     if module["type"] == "script":
                         script_and_pycache = []
                         for file in module["pycache"]:
-                            # %pycached macro logic
+                            # adding pycached files
                             script_and_pycache.append(file)
-                            pyminor = re.search(r"/python3.(\d+)/", file)[1] if re.search(r"/python3.(\d+)/", file) else "*"
-                            dirname = re.match("(.*/)", file)[0]
-                            modulename = re.match(".*/([^/]+).py", file)[1]
-                            script_and_pycache.append(dirname + "__pycache__/" + modulename + ".cpython-3" + pyminor + "{,.opt-?}.pyc")
+                            pyminor = str(sys.version_info[1])
+                            dirname = get_modules_directory(record_path, python3_sitelib, python3_sitearch)
+                            modulename = PurePath(delete_commonpath(file, dirname)).stem
+                            script_and_pycache.append(dirname + "/__pycache__/" + modulename + ".cpython-3" + pyminor +
+                                                      "{,.opt-?}.pyc")
                         paths.update(set(script_and_pycache))
                     else:
                         paths.update(set((module["files"])))
@@ -262,7 +273,8 @@ def pyproject_save_files(root, python3_sitelib, python3_sitearch, bindir, args):
 
     paths_dict = classify_paths(record_path, parsed_record, python3_sitelib, python3_sitearch, bindir)
 
-    files = generate_file_list(paths_dict, *pyproject_save_files_parse(args))
+    files = generate_file_list(record_path, python3_sitelib, python3_sitearch,
+                               paths_dict, *pyproject_save_files_parse(args))
 
     return files
 
