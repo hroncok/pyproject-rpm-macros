@@ -12,16 +12,14 @@ import sys
 
 def delete_commonpath(longer_path, prefix):
     """return string with deleted common path."""
-
-    common_path = os.path.commonpath((longer_path, prefix)).split('/')
-    return '/'.join(longer_path.split('/')[len(common_path):])
+    return str(PurePath(longer_path).relative_to(prefix))
 
 
 def locate_record(root, python3_sitelib, python3_sitearch):
     """return path to record stripped of root path."""
 
-    record_path = list((Path(root) / Path(python3_sitelib[1:])).glob('*.dist-info/RECORD'))
-    record_path.extend(list((Path(root) / Path(python3_sitearch[1:])).glob('*.dist-info/RECORD')))
+    record_path = list((Path(root) / Path(python3_sitelib).relative_to('/')).glob('*.dist-info/RECORD'))
+    record_path.extend(list((Path(root) / Path(python3_sitearch).relative_to('/')).glob('*.dist-info/RECORD')))
 
     if len(record_path) == 0:
         raise FileNotFoundError("Did not find RECORD file")
@@ -35,6 +33,7 @@ def locate_record(root, python3_sitelib, python3_sitearch):
 def read_record(root, record_path):
     """return parsed list [[[path], [hash], [size]], ...]"""
 
+    # there is need to be able join absolute paths
     with open(f"{root}/{record_path}", newline='') as f:
         content = csv.reader(f, delimiter=',', quotechar='"', lineterminator=os.linesep)
         return list(content)
@@ -52,8 +51,8 @@ def parse_record(record_path, record_content):
             -> ["/usr/lib/python3.7/site-packages/requests", ...]
     """
 
-    record_path = "/".join(record_path.split('/')[:-2])
-    files = [os.path.normpath(os.path.join(record_path, row[0])) for row in record_content]
+    site_dir = PurePath(record_path).parent.parent
+    files = [os.path.normpath(Path(site_dir)/row[0]) for row in record_content]
     return files
 
 
