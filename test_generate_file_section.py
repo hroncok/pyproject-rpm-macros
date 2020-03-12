@@ -10,6 +10,8 @@ import warnings
 import shutil
 
 RECORDS_PATH = f"{Path(__file__).parent}"
+SITELIB = PurePath("/usr/lib/python3.7/site-packages")
+SITEARCH = PurePath("/usr/lib64/python3.7/site-packages")
 
 
 def test_parse_record_kerberos():
@@ -22,6 +24,8 @@ def test_parse_record_kerberos():
                 "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/WHEEL",
                 "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/top_level.txt",
                 "/usr/lib64/python3.7/site-packages/kerberos.cpython-37m-x86_64-linux-gnu.so"]
+    expected = [PurePath(file) for file in expected]
+
     assert output == expected
 
 
@@ -40,9 +44,9 @@ def test_parse_record_tensorflow():
     output = parse_record(f"{dist_info_prefix}/{dist_info_dir}/RECORD", record_content)
 
     pprint(output)
-    expected = ['/usr/bin/toco_from_protos',
-                '/usr/lib/python3.7/site-packages/tensorflow_core/include/tensorflow/core/common_runtime/base_collective_executor.h',
-                '/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/METADATA',
+    expected = [PurePath('/usr/bin/toco_from_protos'),
+                PurePath('/usr/lib/python3.7/site-packages/tensorflow_core/include/tensorflow/core/common_runtime/base_collective_executor.h'),
+                PurePath('/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/METADATA'),
                 ]
     assert output == expected
 
@@ -57,6 +61,8 @@ def test_find_metadata():
                              "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/WHEEL",
                              "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/top_level.txt",
                              "/usr/lib64/python3.7/site-packages/kerberos.cpython-37m-x86_64-linux-gnu.so"]
+    parsed_record_content = [PurePath(file) for file in parsed_record_content]
+
     expected = ("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/",
                 ["/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/INSTALLER",
                  "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/METADATA",
@@ -79,8 +85,9 @@ def test_find_extension():
                              "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/top_level.txt",
                              "/usr/lib64/python3.7/site-packages/tensorflow_core/python/ops/__pycache__/gen_state_ops.cpython-37.pyc",
                              "/usr/lib64/python3.7/site-packages/kerberos.cpython-37m-x86_64-linux-gnu.so"]
+    parsed_record_content = [PurePath(file) for file in parsed_record_content]
 
-    assert find_extension("/usr/lib64/python3.7/site-packages", parsed_record_content) == [
+    assert find_extension(SITEARCH, parsed_record_content) == [
         "/usr/lib64/python3.7/site-packages/kerberos.cpython-37m-x86_64-linux-gnu.so"]
 
 
@@ -285,7 +292,7 @@ def test_pyproject_save_files_parse():
     tested = [pyproject_save_files_parse(["requests*", "kerberos", "+bindir"]),
               pyproject_save_files_parse(["tldr", "tensorf*"])]
 
-    expected = [[["requests*", "kerberos"], True], [["tldr", "tensorf*"], False]]
+    expected = [(["requests*", "kerberos"], True), (["tldr", "tensorf*"], False)]
     assert tested == expected
 
 
@@ -365,3 +372,26 @@ def test_find_too_many_RECORDS(tmp_path):
 
     with pytest.raises(FileExistsError):
         main(cli_args)
+
+
+def test_glob_filter_simple():
+    test_list = [PurePath('/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/RECORD')]
+    assert glob_filter("*dist-info/RECORD", test_list) == ['/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/RECORD']
+
+
+def test_glob_filter_recursive_glob_simple():
+    test_list = [PurePath('/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/RECORD')]
+    assert glob_filter("/**/*dist-info/RECORD", test_list) == [
+        '/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/RECORD']
+
+
+def test_glob_filter_recursive_glob():
+    test_list = [PurePath('/usr/lib/python3.7/site-packages/requests/requests_main/main.py')]
+    assert glob_filter('/usr/lib/python3.7/site-packages/requests/**/*.py', test_list) == [
+        '/usr/lib/python3.7/site-packages/requests/requests_main/main.py']
+
+
+def test_glob_filter_recursive_glob_not_match():
+    test_list = [PurePath('/usr/lib/python3.7/site-packages/requests/main.py')]
+    tested = glob_filter('/usr/lib/python3.7/site-packages/requests/**/*/*.py', test_list)
+    assert tested == []
