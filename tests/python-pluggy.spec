@@ -42,6 +42,7 @@ Summary:        %{summary}
 
 %install
 %pyproject_install
+# There are no executables but this still works
 %pyproject_save_files pluggy +bindir
 
 

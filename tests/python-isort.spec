@@ -29,7 +29,7 @@ Summary:            %{summary}
 %pyproject_buildrequires -r
 
 # Drop shebang
-sed -i -e '1{\@^#!.*@d}' %{modname}/main.py
+#sed -i -e '1{\@^#!.*@d}' %{modname}/main.py
 
 %build
 %pyproject_wheel

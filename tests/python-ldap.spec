@@ -1,6 +1,3 @@
-# global prerelease b4
-
-
 # workaround for https://bugzilla.redhat.com/show_bug.cgi?id=1806625
 %global debug_package %{nil}
 
@@ -9,8 +6,9 @@ Version: 3.1.0
 Release: 9%{?dist}
 License: Python
 Summary: An object-oriented API to access LDAP directory servers
-URL: http://python-ldap.org/
-Source0: https://files.pythonhosted.org/packages/source/p/%{name}/%{name}-%{version}%{?prerelease}.tar.gz
+Source0: https://files.pythonhosted.org/packages/source/p/%{name}/%{name}-%{version}.tar.gz
+todo:
+%pypy source
 
 BuildRequires: pyproject-rpm-macros
 
@@ -18,8 +16,7 @@ BuildRequires: pyproject-rpm-macros
 BuildRequires: openldap-devel
 BuildRequires: openssl-devel
 BuildRequires: cyrus-sasl-devel
-%generate_buildrequires
-%pyproject_buildrequires -t
+
 
 %description
 This package contains extension modules. Does not contain pyproject.toml. Has multiple files and directories.
@@ -42,20 +39,25 @@ Requires:  python3-setuptools
 
 
 %prep
-
-
 %setup -q -n %{name}-%{version}%{?prerelease}
 
 # Disable warnings in test to work around "'U' mode is deprecated"
 # https://github.com/python-ldap/python-ldap/issues/96
 sed -i 's,-Werror,-Wignore,g' tox.ini
 
+
+%generate_buildrequires
+%pyproject_buildrequires -t
+
+
 %build
 %pyproject_wheel
+
 
 %install
 %pyproject_install
 %pyproject_save_files ldap* *ldap
+
 
 %check
 # don't download packages
@@ -76,6 +78,7 @@ test -n "$(find '%{buildroot}%{python3_sitearch}' -maxdepth 1 -name '_ldap.cpyth
 rm -rf %{buildroot}%{python3_sitearch}/ldif.py
 rm -rf %{buildroot}%{python3_sitearch}/__pycache__/ldif.cpython*.pyc
 rm -rf %{buildroot}%{python3_sitearch}/slapdtest/
+
 
 %files -n python3-ldap -f %{pyproject_files}
 %license LICENCE
