@@ -8,6 +8,7 @@ from generate_file_section import *
 import tempfile
 import warnings
 import shutil
+import sys
 
 RECORDS_PATH = f"{Path(__file__).parent}"
 SITELIB = PurePath("/usr/lib/python3.7/site-packages")
@@ -83,7 +84,6 @@ def test_find_extension():
                              "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/RECORD",
                              "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/WHEEL",
                              "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/top_level.txt",
-                             "/usr/lib64/python3.7/site-packages/tensorflow_core/python/ops/__pycache__/gen_state_ops.cpython-37.pyc",
                              "/usr/lib64/python3.7/site-packages/kerberos.cpython-37m-x86_64-linux-gnu.so"]
     parsed_record_content = [PurePath(file) for file in parsed_record_content]
 
@@ -238,7 +238,7 @@ file_section = (
                               "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/WHEEL",
                               "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/top_level.txt",
                               ])),
-    ("tldr", "tldr", sorted(["/usr/lib/python3.7/site-packages/__pycache__/tldr.cpython-37{,.opt-?}.pyc",
+    ("tldr", "tldr", sorted(["/usr/lib/python3.7/site-packages/__pycache__/tldr.cpython-3" + str(sys.version_info[1]) + "{,.opt-?}.pyc",
                               "/usr/lib/python3.7/site-packages/tldr.py",
                               "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/INSTALLER",
                               "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/LICENSE",
@@ -249,7 +249,7 @@ file_section = (
                               ])),
 
     ("mistune", "mistune", sorted([
-        "/usr/lib64/python3.7/site-packages/__pycache__/mistune.cpython-37{,.opt-?}.pyc",
+        "/usr/lib64/python3.7/site-packages/__pycache__/mistune.cpython-3" + str(sys.version_info[1]) + "{,.opt-?}.pyc",
         "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/INSTALLER",
         "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/LICENSE",
         "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/METADATA",
@@ -268,8 +268,8 @@ def test_generate_file_list(package, glob, expected):
     paths_dict = PARAMETRIZED_EXPECTED_OUTPUT[package]
     modules_glob = (glob,)
     record_path = TEST_RECORDS[package][0]
-    tested = generate_file_list(record_path, "/usr/lib/python3.7/site-packages",
-                                "/usr/lib64/python3.7/site-packages", paths_dict, modules_glob, False)
+    tested = generate_file_list(PurePath(record_path), PurePath("/usr/lib/python3.7/site-packages"),
+                                PurePath("/usr/lib64/python3.7/site-packages"), paths_dict, modules_glob, False)
 
     assert tested == expected
 
@@ -317,20 +317,18 @@ def create_root(tmp_path, record_path, rel_path_record):
     return f"{tmp_path}/buildroot/"
 
 
-def test_cli(tmp_path):
+@pytest.mark.parametrize("package, glob, expected", file_section)
+def test_cli(tmp_path, package, glob, expected):
     """test cli"""
 
-    expected = file_section[3][2]
-
-    mock_root = create_root(tmp_path, *TEST_RECORDS["tldr"])
-
+    mock_root = create_root(tmp_path, *TEST_RECORDS[package])
     buildir = tmp_path / "builddir"
     buildir.mkdir()
     pyproject_files_path = buildir / "files"
     cli_args = parser.parse_args([str(pyproject_files_path),
                                   mock_root,
                                   "/usr/lib/python3.7/site-packages",
-                                  "/usr/lib64/python3.7/site-packages", "/usr/bin", "tldr*"])
+                                  "/usr/lib64/python3.7/site-packages", "/usr/bin", glob])
 
     main(cli_args)
     with open(pyproject_files_path, "r") as file:
@@ -395,3 +393,9 @@ def test_glob_filter_recursive_glob_not_match():
     test_list = [PurePath('/usr/lib/python3.7/site-packages/requests/main.py')]
     tested = glob_filter('/usr/lib/python3.7/site-packages/requests/**/*/*.py', test_list)
     assert tested == []
+
+
+def test_glob_filter_recursive_match():
+    test_list = [PurePath('/usr/lib/python3.8/site-packages/isort/utils.py')]
+    tested = glob_filter('/usr/lib/python3.8/site-packages/**/*/*.py', test_list)
+    assert tested == ['/usr/lib/python3.8/site-packages/isort/utils.py']

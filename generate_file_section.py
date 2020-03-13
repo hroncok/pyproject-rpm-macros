@@ -191,15 +191,19 @@ def get_modules(packages: Tuple[List[set], List[str]], extension_files: Tuple[Li
 
 def get_modules_directory(record_path: PurePath, python3_sitelib: PurePath, python3_sitearch: PurePath):
     """find out directory where modules should be located"""
-    if os.path.samefile(os.path.commonpath((python3_sitelib, record_path)), python3_sitelib):
+    record_path = os.path.normpath(record_path)
+    python3_sitearch = os.path.normpath(python3_sitearch)
+    python3_sitelib = os.path.normpath(python3_sitelib)
+
+    if os.path.commonpath((python3_sitelib, record_path)) == python3_sitelib:
         modules_dir = python3_sitelib
-    elif os.path.samefile(os.path.commonpath((python3_sitearch, record_path)), python3_sitearch):
+    elif os.path.commonpath((python3_sitearch, record_path)) == python3_sitearch:
         modules_dir = python3_sitearch
     else:
         assert False, f"""python3_sitelib: {python3_sitelib} or python3_sitearch: {python3_sitearch} does not
         contain RECORD file: {record_path}"""
 
-    return modules_dir
+    return PurePath(modules_dir)
 
 
 def classify_paths(record_path: PurePath, parsed_record_content: List[PurePath], python3_sitelib: PurePath, python3_sitearch: PurePath, bindir: PurePath) -> Dict:
