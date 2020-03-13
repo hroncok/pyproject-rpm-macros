@@ -6,7 +6,7 @@ License:        MIT
 
 # Keep the version at zero and increment only release
 Version:        0
-Release:        13%{?dist}
+Release:        14%{?dist}
 Source0:        macros.pyproject
 Source1:        pyproject_buildrequires.py
 Source2:        generate_file_section.py
@@ -97,7 +97,7 @@ install -m 644 generate_file_section.py  %{buildroot}%{_rpmconfigdir}/redhat/
 %license LICENSE
 
 %changelog
-* Mon Feb 17 2020 Patrik Kopkan <pkopkan@redhat.com> - 0-13
+* Fri Mar 13 2020 Patrik Kopkan <pkopkan@redhat.com> - 0-14
 - add %%pyproject_save_file macro for generating file section
 
 * Mon Mar 02 2020 Miro Hrončok <mhroncok@redhat.com> - 0-13
