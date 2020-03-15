@@ -42,7 +42,7 @@
         run: ./mocktest.sh python-isort
     - mistune:
         dir: .
-        run: ./mocktest.sh python-kerberos
+        run: ./mocktest.sh python-mistune
     required_packages:
     - mock
     - rpmdevtools
