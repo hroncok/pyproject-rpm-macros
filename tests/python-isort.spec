@@ -43,7 +43,7 @@ test -d "%{buildroot}%{python3_sitelib}/%{modname}/"
 test -d "%{buildroot}%{python3_sitelib}/%{modname}-%{version}.dist-info/"
 
 # testing not using +bindir in %%pyproject_save_files, make sure if the files get listed build will fail
-# This line must come after %pyproject_save_files so the test is effective
+# This line must come after %%pyproject_save_files so the test is effective
 rm -r %{buildroot}%{_bindir}/%{modname}
 
 
