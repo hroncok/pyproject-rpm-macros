@@ -18,8 +18,8 @@ def delete_commonpath(longer_path, prefix):
 def locate_record(root, python3_sitelib, python3_sitearch):
     """return path to record stripped of root path."""
 
-    record_path = list((Path(root) / Path(python3_sitelib[1:])).glob('*.dist-info/RECORD'))
-    record_path.extend(list((Path(root) / Path(python3_sitearch[1:])).glob('*.dist-info/RECORD')))
+    record_path = list((Path(root) / Path(python3_sitelib).relative_to('/')).glob('*.dist-info/RECORD'))
+    record_path.extend(list((Path(root) / Path(python3_sitearch).relative_to('/')).glob('*.dist-info/RECORD')))
 
     if len(record_path) == 0:
         raise FileNotFoundError("Did not find RECORD file")
