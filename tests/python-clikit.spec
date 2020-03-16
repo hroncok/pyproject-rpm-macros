@@ -40,6 +40,6 @@ Summary:        %{summary}
 %pyproject_save_files clikit
 
 
-%files -n python3-%{pypi_name}
+%files -n python3-%{pypi_name} -f %{pyproject_files}
 %doc README.md
 %license LICENSE

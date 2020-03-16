@@ -1,6 +1,5 @@
 # global prerelease b4
 
-
 # workaround for https://bugzilla.redhat.com/show_bug.cgi?id=1806625
 %global debug_package %{nil}
 
@@ -10,7 +9,7 @@ Release: 9%{?dist}
 License: Python
 Summary: An object-oriented API to access LDAP directory servers
 URL: http://python-ldap.org/
-Source0: https://files.pythonhosted.org/packages/source/p/%{name}/%{name}-%{version}%{?prerelease}.tar.gz
+Source0: %{pypi_source}
 
 BuildRequires: pyproject-rpm-macros
 

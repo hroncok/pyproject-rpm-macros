@@ -30,7 +30,6 @@ Summary:        %{summary}
 
 %generate_buildrequires
 %pyproject_buildrequires
-%pyproject_save_files entrypoints
 
 
 %build
@@ -39,7 +38,7 @@ Summary:        %{summary}
 
 %install
 %pyproject_install
-
+%pyproject_save_files entrypoints
 
 %files -n python3-%{pypi_name} -f %{pyproject_files}
 %doc README.rst
