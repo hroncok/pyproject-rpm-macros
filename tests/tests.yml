@@ -31,9 +31,6 @@
     - openqa_client:
         dir: .
         run: ./mocktest.sh python-openqa_client
-    - kerberos:
-        dir: .
-        run: ./mocktest.sh python-kerberos
     - ldap:
         dir: .
         run: ./mocktest.sh python-ldap

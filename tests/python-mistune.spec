@@ -44,7 +44,7 @@ Summary:        %summary
 %pyproject_save_files mistune
 
 %check
-# making sure that pyproject_install outputs these files so that we can test behaviour of %pyproject_save_files
+# making sure that pyproject_install outputs these files so that we can test behaviour of %%pyproject_save_files
 # when a package has multiple files with the same name (here script and extension)
 test -f "%{buildroot}%{python3_sitearch}/mistune.py" 
 test -d "%{buildroot}%{python3_sitearch}/__pycache__/" 

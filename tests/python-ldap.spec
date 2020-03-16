@@ -25,7 +25,7 @@ BuildRequires: cyrus-sasl-devel
 This package contains extension modules. Does not contain pyproject.toml. Has multiple files and directories.
 Building this tests:
 - the proper files are installed in the proper places
-- module glob in %pyproject_save_files (some modules are included, some not)
+- module glob in %%pyproject_save_files (some modules are included, some not)
 
 
 %package -n     python3-ldap
