@@ -51,9 +51,10 @@ def parse_record(record_path, record_content):
         parse_record("/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/RECORD", ["requests", ...])
             -> ["/usr/lib/python3.7/site-packages/requests", ...]
     """
+    record_path = Path(record_path)
 
-    record_path = "/".join(record_path.split('/')[:-2])
-    files = [os.path.normpath(os.path.join(record_path, row[0])) for row in record_content]
+    install_directory = record_path.parent.parent
+    files = [os.path.normpath(record_path / row[0]) for row in record_content]
     return files
 
 
