@@ -30,7 +30,7 @@ def locate_record(root, python3_sitelib, python3_sitearch):
 
 
 def read_record(root, record_path):
-    """return parsed list [[[path], [hash], [size]], ...]"""
+    """returns parsed list of triplets like: [(path, hash, size), ...]"""
 
     with open(f"{root}/{record_path}", newline='') as f:
         content = csv.reader(f, delimiter=',', quotechar='"', lineterminator=os.linesep)
