@@ -11,8 +11,7 @@ from warnings import warn
 def delete_commonpath(longer_path, prefix):
     """return string with deleted common path."""
 
-    common_path = os.path.commonpath((longer_path, prefix)).split('/')
-    return '/'.join(longer_path.split('/')[len(common_path):])
+    return Path('/') / Path(longer_path).relative_to(prefix)
 
 
 def locate_record(root, python3_sitelib, python3_sitearch):
@@ -26,7 +25,7 @@ def locate_record(root, python3_sitelib, python3_sitearch):
     if len(record_path) > 1:
         raise FileExistsError("Multiple *.dist-info directories")
 
-    record_path = str(record_path[0])
+    record_path = record_path[0]
     return "/" + delete_commonpath(record_path, root)
 
 
