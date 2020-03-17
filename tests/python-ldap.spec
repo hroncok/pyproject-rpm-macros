@@ -21,8 +21,6 @@ BuildRequires: gcc
 BuildRequires: openldap-servers
 BuildRequires: openldap-clients
 
-%generate_buildrequires
-%pyproject_buildrequires -t
 
 %description
 This package contains extension modules. Does not contain pyproject.toml. Has multiple files and directories.
@@ -46,6 +44,9 @@ Requires:  python3-setuptools
 
 %prep
 
+
+%generate_buildrequires
+%pyproject_buildrequires -t
 
 %setup -q -n %{name}-%{version}%{?prerelease}
 
