@@ -27,6 +27,7 @@ This package contains extension modules. Does not contain pyproject.toml. Has mu
 Building this tests:
 - the proper files are installed in the proper places
 - module glob in %%pyproject_save_files (some modules are included, some not)
+- combined manual and generated Buildrequires
 
 
 %package -n     python3-ldap
@@ -43,16 +44,16 @@ Requires:  python3-setuptools
 
 
 %prep
-
-
-%generate_buildrequires
-%pyproject_buildrequires -t
-
 %setup -q -n %{name}-%{version}%{?prerelease}
 
 # Disable warnings in test to work around "'U' mode is deprecated"
 # https://github.com/python-ldap/python-ldap/issues/96
 sed -i 's,-Werror,-Wignore,g' tox.ini
+
+
+%generate_buildrequires
+%pyproject_buildrequires -t
+
 
 %build
 %pyproject_wheel
@@ -65,7 +66,7 @@ sed -i 's,-Werror,-Wignore,g' tox.ini
 # don't download packages
 #export PIP_INDEX_URL=http://host.invalid./
 #export PIP_NO_DEPS=yes
-LOGLEVEL=10 %tox -- --sitepackages
+LOGLEVEL=10 %tox
 
 # check if the instalation outputs expected files
 test -d "%{buildroot}%{python3_sitearch}/__pycache__/" 
