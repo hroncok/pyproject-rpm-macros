@@ -76,7 +76,7 @@ def find_metadata(parsed_record_content, python3_sitedir, record_path):
     """go through parsed RECORD content, returns tuple:
     (path to directory containing metadata, [paths to all metadata files])."""
 
-    dist_info = re.search(f"{re.escape(python3_sitedir)}/[^/]*", record_path)[0] + "/"
+    dist_info = re.search(f"{re.escape(python3_sitedir)}/[^/]*", str(record_path))[0] + "/"
 
     return dist_info, [*pattern_filter(f"{re.escape(dist_info)}.*", parsed_record_content)]
 
@@ -93,7 +93,7 @@ def find_script(python3_sitedir, parsed_record_content):
     scripts = pattern_filter(f"{re.escape(python3_sitedir)}/[^/]*\\.py$", parsed_record_content)
     pycache = []
     for script in scripts:
-        filename = delete_commonpath(script, python3_sitedir)[:-(len('.py'))]  # without suffix
+        filename = delete_commonpath(script, python3_sitedir).stem  # without suffix
         pycache.extend(pattern_filter(f"{re.escape(python3_sitedir)}/__pycache__/{filename}.*\\.pyc", parsed_record_content))
 
     return scripts, pycache
