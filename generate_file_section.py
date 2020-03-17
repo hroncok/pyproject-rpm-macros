@@ -26,14 +26,17 @@ def locate_record(root, python3_sitelib, python3_sitearch):
         raise FileExistsError("Multiple *.dist-info directories")
 
     record_path = record_path[0]
-    return "/" + delete_commonpath(record_path, root)
+    return "/" / delete_commonpath(record_path, root)
 
 
 def read_record(root, record_path):
     """returns parsed list of triplets like: [(path, hash, size), ...]"""
     root = Path(root)
     # can't join both absolute like paths properly
-    record_path = Path(record_path).relative_to("/")
+    try:
+        record_path = Path(record_path).relative_to("/")
+    except ValueError:
+        record_path = Path(record_path)
 
     with open(root / record_path, newline='', encoding='utf-8') as f:
         content = csv.reader(f, delimiter=',', quotechar='"', lineterminator=os.linesep)
@@ -54,7 +57,7 @@ def parse_record(record_path, record_content):
     record_path = Path(record_path)
 
     install_directory = record_path.parent.parent
-    files = [os.path.normpath(record_path / row[0]) for row in record_content]
+    files = [os.path.normpath(install_directory / row[0]) for row in record_content]
     return files
 
 
