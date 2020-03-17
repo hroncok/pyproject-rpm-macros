@@ -17,6 +17,10 @@ BuildRequires: pyproject-rpm-macros
 BuildRequires: openldap-devel
 BuildRequires: openssl-devel
 BuildRequires: cyrus-sasl-devel
+BuildRequires: gcc
+BuildRequires: openldap-servers
+BuildRequires: openldap-clients
+
 %generate_buildrequires
 %pyproject_buildrequires -t
 
