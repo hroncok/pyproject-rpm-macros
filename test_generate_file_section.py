@@ -7,6 +7,8 @@ import generate_file_section
 from generate_file_section import *
 import tempfile
 import warnings
+from pathlib import PurePath
+from pathlib import Path
 import shutil
 
 RECORDS_PATH = f"{Path(__file__).parent}"
@@ -16,12 +18,12 @@ def test_parse_record_kerberos():
     """test if RECORD file is parsed properly"""
     record_content = read_record(RECORDS_PATH, "test_RECORD_kerberos")
     output = parse_record("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/RECORD", record_content)
-    expected = ["/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/INSTALLER",
-                "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/METADATA",
-                "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/RECORD",
-                "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/WHEEL",
-                "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/top_level.txt",
-                "/usr/lib64/python3.7/site-packages/kerberos.cpython-37m-x86_64-linux-gnu.so"]
+    expected = [PurePath("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/INSTALLER"),
+                PurePath("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/METADATA"),
+                PurePath("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/RECORD"),
+                PurePath("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/WHEEL"),
+                PurePath("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/top_level.txt"),
+                PurePath("/usr/lib64/python3.7/site-packages/kerberos.cpython-37m-x86_64-linux-gnu.so")]
     assert output == expected
 
 
@@ -40,9 +42,9 @@ def test_parse_record_tensorflow():
     output = parse_record(f"{dist_info_prefix}/{dist_info_dir}/RECORD", record_content)
 
     pprint(output)
-    expected = ['/usr/bin/toco_from_protos',
-                '/usr/lib/python3.7/site-packages/tensorflow_core/include/tensorflow/core/common_runtime/base_collective_executor.h',
-                '/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/METADATA',
+    expected = [PurePath('/usr/bin/toco_from_protos'),
+                PurePath('/usr/lib/python3.7/site-packages/tensorflow_core/include/tensorflow/core/common_runtime/base_collective_executor.h'),
+                PurePath('/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/METADATA'),
                 ]
     assert output == expected
 
@@ -51,12 +53,12 @@ def test_find_metadata():
     """test if function returns list with all metadata paths"""
     dist_info_dir = "kerberos-1.3.0.dist-info/"
     dist_info_prefix = "/usr/lib64/python3.7/site-packages"
-    parsed_record_content = ["/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/INSTALLER",
-                             "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/METADATA",
-                             "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/RECORD",
-                             "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/WHEEL",
-                             "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/top_level.txt",
-                             "/usr/lib64/python3.7/site-packages/kerberos.cpython-37m-x86_64-linux-gnu.so"]
+    parsed_record_content = [PurePath("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/INSTALLER"),
+                             PurePath("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/METADATA"),
+                             PurePath("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/RECORD"),
+                             PurePath("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/WHEEL"),
+                             PurePath("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/top_level.txt"),
+                             PurePath("/usr/lib64/python3.7/site-packages/kerberos.cpython-37m-x86_64-linux-gnu.so")]
     expected = ("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/",
                 ["/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/INSTALLER",
                  "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/METADATA",
@@ -72,27 +74,23 @@ def test_find_metadata():
 
 def test_find_extension():
     """test list of extension"""
-    parsed_record_content = ["/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/INSTALLER",
-                             "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/METADATA",
-                             "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/RECORD",
-                             "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/WHEEL",
-                             "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/top_level.txt",
-                             "/usr/lib64/python3.7/site-packages/tensorflow_core/python/ops/__pycache__/gen_state_ops.cpython-37.pyc",
-                             "/usr/lib64/python3.7/site-packages/kerberos.cpython-37m-x86_64-linux-gnu.so"]
+    parsed_record_content = [PurePath("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/INSTALLER"),
+                             PurePath("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/METADATA"),
+                             PurePath("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/RECORD"),
+                             PurePath("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/WHEEL"),
+                             PurePath("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/top_level.txt"),
+                             PurePath("/usr/lib64/python3.7/site-packages/tensorflow_core/python/ops/__pycache__/gen_state_ops.cpython-37.pyc"),
+                             PurePath("/usr/lib64/python3.7/site-packages/kerberos.cpython-37m-x86_64-linux-gnu.so")]
 
-    assert find_extension("/usr/lib64/python3.7/site-packages", parsed_record_content) == [
+    assert find_extension(PurePath("/usr/lib64/python3.7/site-packages"), parsed_record_content) == [
         "/usr/lib64/python3.7/site-packages/kerberos.cpython-37m-x86_64-linux-gnu.so"]
 
 
-# def test_find_extension_mistune():
-#     """test list of extensions for mistune package"""
-#     parsed_record_content = []
-
 def test_find_script():
-    dist_info_dir = "tldr-0.5.dist-info/"
-    python3_sitedir = "/usr/lib64/python3.7/site-packages"
-    record_content = read_record(RECORDS_PATH, "test_RECORD_tldr")
-    record_path = os.path.join(python3_sitedir, dist_info_dir, "RECORD")
+    dist_info_dir = Path("tldr-0.5.dist-info/")
+    python3_sitedir = PurePath("/usr/lib64/python3.7/site-packages")
+    record_content = read_record(Path(RECORDS_PATH), Path("test_RECORD_tldr"))
+    record_path = python3_sitedir / dist_info_dir / "RECORD"
     parsed_record_content = parse_record(record_path, record_content)
     expected = (["/usr/lib64/python3.7/site-packages/tldr.py"],
                 ["/usr/lib64/python3.7/site-packages/__pycache__/tldr.cpython-37.pyc"]

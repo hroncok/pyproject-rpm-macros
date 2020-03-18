@@ -4,6 +4,7 @@ import fnmatch
 import os
 import re
 from pathlib import Path
+from pathlib import PurePath
 from pprint import pformat
 from warnings import warn
 
@@ -11,7 +12,7 @@ from warnings import warn
 def delete_commonpath(longer_path, prefix):
     """return string with deleted common path."""
 
-    return Path('/') / Path(longer_path).relative_to(prefix)
+    return PurePath('/') / PurePath(longer_path).relative_to(prefix)
 
 
 def locate_record(root, python3_sitelib, python3_sitearch):
@@ -26,7 +27,7 @@ def locate_record(root, python3_sitelib, python3_sitearch):
         raise FileExistsError("Multiple *.dist-info directories")
 
     record_path = record_path[0]
-    return "/" / delete_commonpath(record_path, root)
+    return PurePath("/") / delete_commonpath(record_path, root)
 
 
 def read_record(root, record_path):
@@ -54,47 +55,77 @@ def parse_record(record_path, record_content):
         parse_record("/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/RECORD", ["requests", ...])
             -> ["/usr/lib/python3.7/site-packages/requests", ...]
     """
-    record_path = Path(record_path)
+    record_path = PurePath(record_path)
 
     install_directory = record_path.parent.parent
-    files = [os.path.normpath(install_directory / row[0]) for row in record_content]
+    files = [PurePath(os.path.normpath(install_directory / row[0])) for row in record_content]
     return files
 
 
 def pattern_filter(pattern, parsed_record_content):
     """filter list by given pattern."""
 
-    matched = []
     comp = re.compile(pattern)
-    for path in parsed_record_content:
-        if comp.search(path):
-            matched.append(path)
-    return matched
+    return [str(path) for path in parsed_record_content if comp.search(str(path))]
+
+
+def is_subpath(parent, child):
+    """
+    Check whether the given child is a subpath of parent.
+    Expects both arguments to be absolute Paths (no checks are done).
+    """
+    try:
+        child.relative_to(parent)
+    except ValueError:
+        return False
+    else:
+        return True
 
 
 def find_metadata(parsed_record_content, python3_sitedir, record_path):
     """go through parsed RECORD content, returns tuple:
-    (path to directory containing metadata, [paths to all metadata files])."""
+    (path to directory containing metadata, [paths to all metadata files]).
 
-    dist_info = re.search(f"{re.escape(python3_sitedir)}/[^/]*", str(record_path))[0] + "/"
-
-    return dist_info, [*pattern_filter(f"{re.escape(dist_info)}.*", parsed_record_content)]
+    find_metadata(["/usr/lib/python3.7/site-packages/requests/__init__.py, ..."],
+                   "/usr/lib/python3.7/site-packages",
+                   "/usr/lib/python3.7/site-packages/requests-2.10.dist-info/RECORD")
+            -> ("/usr/lib/python3.7/site-packages/requests-2.10.dist-info/,
+                ["/usr/lib/python3.7/site-packages/requests-2.10.dist-info/RECORD", ...])
+    """
+    record_path = PurePath(record_path)
+    metadata_dir = record_path.parent
+    return f"{metadata_dir}/", [str(path) for path in parsed_record_content if is_subpath(metadata_dir, path)]
 
 
 def find_extension(python3_sitedir, parsed_record_content):
     """list paths to extensions"""
 
-    return pattern_filter(f"{re.escape(python3_sitedir)}/[^/]*\\.so$", parsed_record_content)
+    return [str(path) for path in parsed_record_content
+            if path.parent == python3_sitedir and path.match('*.so')]
 
 
 def find_script(python3_sitedir, parsed_record_content):
     """list paths to scripts"""
 
-    scripts = pattern_filter(f"{re.escape(python3_sitedir)}/[^/]*\\.py$", parsed_record_content)
+    scripts = pattern_filter(f"{re.escape(str(python3_sitedir))}/[^/]*\\.py$", parsed_record_content)
     pycache = []
     for script in scripts:
         filename = delete_commonpath(script, python3_sitedir).stem  # without suffix
-        pycache.extend(pattern_filter(f"{re.escape(python3_sitedir)}/__pycache__/{filename}.*\\.pyc", parsed_record_content))
+        pycache.extend(pattern_filter(f"{re.escape(str(python3_sitedir))}/__pycache__/{filename}.*\\.pyc", parsed_record_content))
+
+    return scripts, pycache
+
+
+def find_script(python3_sitedir, parsed_record_content):
+    """list paths to scripts"""
+
+    # scripts are all .py files in directory where dist-info is saved
+    scripts = [path for path in parsed_record_content if path.match(f"{python3_sitedir}/*.py")]
+    # scripts = pattern_filter(f"{re.escape(str(python3_sitedir))}/[^/]*\\.py$", parsed_record_content) # todo: delete
+    pycache = []
+    for script in scripts:
+        filename = delete_commonpath(script, python3_sitedir).stem  # without suffix
+        pycache.extend([path for path in parsed_record_content if path.match("")])
 
     return scripts, pycache
 
@@ -274,11 +305,11 @@ def pyproject_save_files(root, python3_sitelib, python3_sitearch, bindir, args):
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("path_to_save", help="Path to save list of paths for file secton")
-parser.add_argument('buildroot')
-parser.add_argument('python3_sitelib')
-parser.add_argument('python3_sitearch')
-parser.add_argument('bindir')
+parser.add_argument("path_to_save", help="Path to save list of paths for file secton", type=lambda x: Path(x))
+parser.add_argument('buildroot', type=lambda x: PurePath(x))
+parser.add_argument('python3_sitelib', type=lambda x: PurePath(x))
+parser.add_argument('python3_sitearch', type=lambda x: PurePath(x))
+parser.add_argument('bindir', type=lambda x: PurePath(x))
 parser.add_argument("globs_to_save", nargs="+")
 
 
