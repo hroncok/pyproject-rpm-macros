@@ -6,9 +6,8 @@ Version: 3.1.0
 Release: 9%{?dist}
 License: Python
 Summary: An object-oriented API to access LDAP directory servers
-Source0: https://files.pythonhosted.org/packages/source/p/%{name}/%{name}-%{version}.tar.gz
-todo:
-%pypy source
+URL: http://python-ldap.org/
+Source0: %{pypi_source}
 
 BuildRequires: pyproject-rpm-macros
 
@@ -17,12 +16,17 @@ BuildRequires: openldap-devel
 BuildRequires: openssl-devel
 BuildRequires: cyrus-sasl-devel
 
+BuildRequires: gcc
+BuildRequires: openldap-servers
+BuildRequires: openldap-clients
+
 
 %description
 This package contains extension modules. Does not contain pyproject.toml. Has multiple files and directories.
 Building this tests:
 - the proper files are installed in the proper places
-- module glob in %pyproject_save_files (some modules are included, some not)
+- module glob in %%pyproject_save_files (some modules are included, some not)
+- combined manual and generated Buildrequires
 
 
 %package -n     python3-ldap
@@ -63,7 +67,7 @@ sed -i 's,-Werror,-Wignore,g' tox.ini
 # don't download packages
 #export PIP_INDEX_URL=http://host.invalid./
 #export PIP_NO_DEPS=yes
-LOGLEVEL=10 %tox -- --sitepackages
+LOGLEVEL=10 %tox
 
 # check if the instalation outputs expected files
 test -d "%{buildroot}%{python3_sitearch}/__pycache__/" 

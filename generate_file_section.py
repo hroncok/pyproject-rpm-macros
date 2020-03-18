@@ -13,8 +13,8 @@ from typing import List, Dict, Union, Tuple, Set, Any, Optional
 
 def delete_commonpath(longer_path: Union[str, PurePath, Path], prefix: Union[str, PurePath, Path]) -> str:
     """return string with deleted common path."""
-    return str(PurePath(longer_path).relative_to(prefix))
 
+    return PurePath('/') / PurePath(longer_path).relative_to(prefix)
 
 def locate_record(root: Path, python3_sitelib: PurePath, python3_sitearch: PurePath) -> Path:
     """return path to record stripped of root path."""
@@ -32,10 +32,16 @@ def locate_record(root: Path, python3_sitelib: PurePath, python3_sitearch: PureP
 
 
 def read_record(root: Path, record_path: Path) -> List[Any]:
-    """return parsed list [[[path], [hash], [size]], ...]"""
+    """returns parsed list of triplets like: [(path, hash, size), ...]"""
 
-    # there is need to be able join absolute paths
-    with open(f"{root}/{record_path}", newline='') as f:
+    root = Path(root)
+    # can't join both absolute like paths properly
+    try:
+        record_path = Path(record_path).relative_to("/")
+    except ValueError:
+        record_path = Path(record_path)
+
+    with open(root / record_path, newline='', encoding='utf-8') as f:
         content = csv.reader(f, delimiter=',', quotechar='"', lineterminator=os.linesep)
         return list(content)
 
@@ -51,21 +57,31 @@ def parse_record(record_path: Union[Path, str], record_content: List[Tuple[str, 
         parse_record("/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/RECORD", ["requests", ...])
             -> ["/usr/lib/python3.7/site-packages/requests", ...]
     """
+    record_path = PurePath(record_path)
 
     site_dir = PurePath(record_path).parent.parent
     files = [PurePath(os.path.normpath(Path(site_dir)/row[0])) for row in record_content]
     return files
 
 
-def reg_filter(pattern: str, parsed_record_content: List[PurePath]) -> List[Optional[str]]:
+def pattern_filter(pattern: str, parsed_record_content: List[PurePath]) -> List[Optional[str]]:
     """filter list by given regex pattern."""
 
-    matched = []
     comp = re.compile(pattern)
-    for path in parsed_record_content:
-        if comp.search(path):
-            matched.append(path)
-    return matched
+    return [str(path) for path in parsed_record_content if comp.search(str(path))]
+
+
+def is_subpath(parent, child):
+    """
+    Check whether the given child is a subpath of parent.
+    Expects both arguments to be absolute Paths (no checks are done).
+    """
+    try:
+        child.relative_to(parent)
+    except ValueError:
+        return False
+    else:
+        return True
 
 
 def glob_filter(pattern: str, parsed_record_content: List[PurePath]) -> List[Optional[str]]:
@@ -93,27 +109,43 @@ def glob_filter(pattern: str, parsed_record_content: List[PurePath]) -> List[Opt
 
 def find_metadata(parsed_record_content: List[PurePath], python3_sitedir: PurePath, record_path: PurePath) -> Tuple[str, List[str]]:
     """go through parsed RECORD content, returns tuple:
-    (path to directory containing metadata, [paths to all metadata files])."""
+    (path to directory containing metadata, [paths to all metadata files]).
 
-    dist_info = re.search(f"{re.escape(str(python3_sitedir))}/[^/]*", f"{record_path}")[0] + "/"
-
-    return dist_info, [*glob_filter(f"{dist_info}*", parsed_record_content)]
+    find_metadata(["/usr/lib/python3.7/site-packages/requests/__init__.py, ..."],
+                   "/usr/lib/python3.7/site-packages",
+                   "/usr/lib/python3.7/site-packages/requests-2.10.dist-info/RECORD")
+            -> ("/usr/lib/python3.7/site-packages/requests-2.10.dist-info/,
+                ["/usr/lib/python3.7/site-packages/requests-2.10.dist-info/RECORD", ...])
+    """
+    record_path = PurePath(record_path)
+    metadata_dir = record_path.parent
+    return f"{metadata_dir}/", [str(path) for path in parsed_record_content if is_subpath(metadata_dir, path)]
+    # return dist_info, [*glob_filter(f"{dist_info}*", parsed_record_content)]
 
 
 def find_extension(python3_sitedir: PurePath, parsed_record_content: List[PurePath]) -> List[str]:
     """list paths to extensions"""
 
-    return glob_filter(f"{python3_sitedir}/*.so", parsed_record_content)
+    #return pattern_filter(f"{re.escape(python3_sitedir)}/[^/]*\\.so$", parsed_record_content)
+    #return glob_filter(f"{python3_sitedir}/*.so", parsed_record_content)
+    return [str(path) for path in parsed_record_content
+            if path.parent == python3_sitedir and path.match('*.so')]
 
 
 def find_script(python3_sitedir: PurePath, parsed_record_content: List[PurePath]) -> Tuple[List[str], List[str]]:
     """list paths to scripts"""
 
-    scripts = glob_filter(f"{python3_sitedir}/*.py", parsed_record_content)
+#    scripts = glob_filter(f"{python3_sitedir}/*.py", parsed_record_content)
+    scripts = pattern_filter(f"{re.escape(python3_sitedir)}/[^/]*\\.py$", parsed_record_content)
     pycache = []
     for script in scripts:
+        ## scripts are all .py files in directory where dist-info is saved
+        #scripts = [path for path in parsed_record_content if path.match(f"{python3_sitedir}/*.py")]
+        # scripts = pattern_filter(f"{re.escape(str(python3_sitedir))}/[^/]*\\.py$", parsed_record_content) # todo: delete
+
         filename = delete_commonpath(script, python3_sitedir)  # without suffix
         filename = PurePath(filename).stem
+        #        pycache.extend(pattern_filter(f"{re.escape(python3_sitedir)}/__pycache__/{filename}.*\\.pyc", parsed_record_content))
         pycache.extend(glob_filter(f"{python3_sitedir}/__pycache__/{filename}*.pyc",
                                    parsed_record_content))
 
@@ -125,7 +157,8 @@ def find_package(python3_sitelib: PurePath, python3_sitearch: PurePath, parsed_r
 
     packages = set()
     for sitedir in (python3_sitelib, python3_sitearch):
-        python_files = glob_filter(f"{sitedir}/**/*/*.py", parsed_record_content)
+        #python_files = glob_filter(f"{sitedir}/**/*/*.py", parsed_record_content)
+        python_files = pattern_filter(f"{re.escape(sitedir)}/.*/.*\\.py$", parsed_record_content)
         sitedir = Path(sitedir)
         for file in python_files:
             file = Path(file)
@@ -136,15 +169,17 @@ def find_package(python3_sitelib: PurePath, python3_sitearch: PurePath, parsed_r
 
     files: List[str] = []
     for package in packages:
-        files += glob_filter(f"{package}**/*", parsed_record_content)
-    return packages, sorted(files)
+#        files += glob_filter(f"{package}**/*", parsed_record_content)
+        files += pattern_filter(f"{re.escape(package)}.*", parsed_record_content)
 
+    return packages, files
 
 def find_executable(bindir: PurePath, parsed_record_content: List[PurePath]) -> Tuple[List[str], List[str]]:
     """return all files in bindir"""
 
     executables = []
-    bindir_content = glob_filter(f"{bindir}/**/*", parsed_record_content)
+    #    bindir_content = glob_filter(f"{bindir}/**/*", parsed_record_content)
+    bindir_content = pattern_filter(f"{re.escape(bindir)}.*", parsed_record_content)
     for file in bindir_content:
         # do not list .pyc files, because pyproject-rpm-macro deletes them in bindir
         if not file.endswith(".pyc"):

@@ -31,7 +31,6 @@ py.test provides simple, yet powerful testing for Python.
 
 %generate_buildrequires
 %pyproject_buildrequires -x testing -t
-%pyproject_save_files *pytest +bindir
 
 %build
 %pyproject_wheel
@@ -39,6 +38,7 @@ py.test provides simple, yet powerful testing for Python.
 
 %install
 %pyproject_install
+%pyproject_save_files *pytest +bindir
 
 %check
 # Only run one test (which uses a test-only dependency, hypothesis).
