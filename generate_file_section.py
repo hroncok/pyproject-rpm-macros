@@ -183,7 +183,6 @@ def find_executable(bindir: PurePath, parsed_record_content: List[PurePath]) -> 
     executables = []
     #    bindir_content = glob_filter(f"{bindir}/**/*", parsed_record_content)
     bindir_content = pattern_filter(f"{re.escape(str(bindir))}.*", parsed_record_content)
-    breakpoint()
     for file in bindir_content:
         # do not list .pyc files, because pyproject-rpm-macro deletes them in bindir
         if not file.endswith(".pyc"):
@@ -344,7 +343,6 @@ def pyproject_save_files(root: Path, python3_sitelib: PurePath, python3_sitearch
     """
     record_path = locate_record(root, python3_sitelib, python3_sitearch)
     parsed_record = parse_record(record_path, (read_record(root, record_path)))
-    breakpoint()
     paths_dict = classify_paths(record_path, parsed_record, python3_sitelib, python3_sitearch, bindir)
 
     files = generate_file_list(record_path, python3_sitelib, python3_sitearch,
