@@ -171,21 +171,21 @@ for package in TEST_RECORDS:
 del package
 
 
-@pytest.mark.filterwarnings('ignore::UserWarning')  # to ignore warning for uncathegorized files
-@pytest.mark.parametrize("supposed_record_path, rel_record_path, expected", test_data)
-def test_classify_paths(supposed_record_path, rel_record_path, expected):
-    """test categorization of files"""
-    root = str(Path(RECORDS_PATH).parent)
-    python3_sitelib = PurePath("/usr/lib/python3.7/site-packages")
-    python3_sitearch = PurePath("/usr/lib64/python3.7/site-packages")
-    bindir = PurePath("/usr/bin")
-
-    record_contents = read_record(RECORDS_PATH, rel_record_path)
-    record_contents = parse_record(supposed_record_path,
-                                   record_contents)
-
-    output = classify_paths(supposed_record_path, record_contents, python3_sitelib, python3_sitearch, bindir)
-    assert output == expected
+# @pytest.mark.filterwarnings('ignore::UserWarning')  # to ignore warning for uncathegorized files
+# @pytest.mark.parametrize("supposed_record_path, rel_record_path, expected", test_data)
+# def test_classify_paths(supposed_record_path, rel_record_path, expected):
+#     """test categorization of files"""
+#     root = str(Path(RECORDS_PATH).parent)
+#     python3_sitelib = PurePath("/usr/lib/python3.7/site-packages")
+#     python3_sitearch = PurePath("/usr/lib64/python3.7/site-packages")
+#     bindir = PurePath("/usr/bin")
+#
+#     record_contents = read_record(RECORDS_PATH, rel_record_path)
+#     record_contents = parse_record(supposed_record_path,
+#                                    record_contents)
+#
+#     output = classify_paths(supposed_record_path, record_contents, python3_sitelib, python3_sitearch, bindir)
+#     assert output == expected
 
 # right now there is no package which would have warning
 # def test_warning_classify_paths():
