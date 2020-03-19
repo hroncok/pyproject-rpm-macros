@@ -85,13 +85,9 @@ def test_find_extension():
                              PurePath("/usr/lib64/python3.7/site-packages/tensorflow_core/python/ops/__pycache__/gen_state_ops.cpython-37.pyc"),
                              PurePath("/usr/lib64/python3.7/site-packages/kerberos.cpython-37m-x86_64-linux-gnu.so")]
 
-    assert find_extension(SITEARCH, parsed_record_content) == [
-        "/usr/lib64/python3.7/site-packages/kerberos.cpython-37m-x86_64-linux-gnu.so"]
+    assert find_extension(SITEARCH, parsed_record_content) == ([
+        "/usr/lib64/python3.7/site-packages/kerberos.cpython-37m-x86_64-linux-gnu.so"])
 
-
-# def test_find_extension_mistune():
-#     """test list of extensions for mistune package"""
-#     parsed_record_content = []
 
 def test_find_script():
     dist_info_dir = Path("tldr-0.5.dist-info/")
@@ -100,15 +96,15 @@ def test_find_script():
     record_path = python3_sitedir / dist_info_dir / "RECORD"
     parsed_record_content = parse_record(record_path, record_content)
     expected = (["/usr/lib64/python3.7/site-packages/tldr.py"],
-                ["/usr/lib64/python3.7/site-packages/__pycache__/tldr.cpython-37.pyc"]
-                )
+                ["/usr/lib64/python3.7/site-packages/tldr.py",
+                 "/usr/lib64/python3.7/site-packages/__pycache__/tldr.cpython-37.pyc"])
 
     tested = find_script(python3_sitedir, parsed_record_content)
     assert tested == expected
 
 
 def test_find_package():
-    dist_info_dir = "requests-2.22.0.dist-info/"
+    dist_info_dir = PurePath("requests-2.22.0.dist-info/")
     python3_sitedir = "/usr/lib/python3.7/site-packages"
     python3_sitearch = "/usr/lib64/python3.7/site-packages"
     record_content = read_record(RECORDS_PATH, "test_RECORD_requests")

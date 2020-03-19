@@ -16,6 +16,7 @@ def delete_commonpath(longer_path: Union[str, PurePath, Path], prefix: Union[str
 
     return PurePath('/') / PurePath(longer_path).relative_to(prefix)
 
+
 def locate_record(root: Path, python3_sitelib: PurePath, python3_sitearch: PurePath) -> Path:
     """return path to record stripped of root path."""
 
@@ -136,7 +137,8 @@ def find_script(python3_sitedir: PurePath, parsed_record_content: List[PurePath]
     """list paths to scripts"""
 
 #    scripts = glob_filter(f"{python3_sitedir}/*.py", parsed_record_content)
-    scripts = pattern_filter(f"{re.escape(python3_sitedir)}/[^/]*\\.py$", parsed_record_content)
+    scripts = pattern_filter(f"{re.escape(str(python3_sitedir))}/[^/]*\\.py$", parsed_record_content)
+    scripts = [str(path) for path in parsed_record_content if path.match(f"{python3_sitedir}/*.py")]
     pycache = []
     for script in scripts:
         ## scripts are all .py files in directory where dist-info is saved
@@ -149,7 +151,7 @@ def find_script(python3_sitedir: PurePath, parsed_record_content: List[PurePath]
         pycache.extend(glob_filter(f"{python3_sitedir}/__pycache__/{filename}*.pyc",
                                    parsed_record_content))
 
-    return scripts, pycache
+    return scripts, scripts + pycache
 
 
 def find_package(python3_sitelib: PurePath, python3_sitearch: PurePath, parsed_record_content: List[PurePath]) -> Tuple[Set[str], List[str]]:
@@ -158,7 +160,7 @@ def find_package(python3_sitelib: PurePath, python3_sitearch: PurePath, parsed_r
     packages = set()
     for sitedir in (python3_sitelib, python3_sitearch):
         #python_files = glob_filter(f"{sitedir}/**/*/*.py", parsed_record_content)
-        python_files = pattern_filter(f"{re.escape(sitedir)}/.*/.*\\.py$", parsed_record_content)
+        python_files = pattern_filter(f"{re.escape(str(sitedir))}/.*/.*\\.py$", parsed_record_content)
         sitedir = Path(sitedir)
         for file in python_files:
             file = Path(file)
@@ -174,12 +176,13 @@ def find_package(python3_sitelib: PurePath, python3_sitearch: PurePath, parsed_r
 
     return packages, files
 
+
 def find_executable(bindir: PurePath, parsed_record_content: List[PurePath]) -> Tuple[List[str], List[str]]:
     """return all files in bindir"""
 
     executables = []
     #    bindir_content = glob_filter(f"{bindir}/**/*", parsed_record_content)
-    bindir_content = pattern_filter(f"{re.escape(bindir)}.*", parsed_record_content)
+    bindir_content = pattern_filter(f"{re.escape(str(bindir))}.*", parsed_record_content)
     for file in bindir_content:
         # do not list .pyc files, because pyproject-rpm-macro deletes them in bindir
         if not file.endswith(".pyc"):
@@ -258,7 +261,7 @@ def classify_paths(record_path: PurePath, parsed_record_content: List[PurePath],
         file = PurePath(file)
         parsed_record_content.remove(file)
     scripts, pycached = find_script(python3_sitedir, parsed_record_content)
-    for file in scripts + pycached:
+    for file in pycached:
         file = PurePath(file)
         parsed_record_content.remove(file)
     executables, bindir_content = find_executable(bindir, parsed_record_content)
