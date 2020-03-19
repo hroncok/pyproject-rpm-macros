@@ -71,7 +71,7 @@ def test_find_metadata():
 
     record_path = os.path.join(dist_info_prefix, dist_info_dir, "RECORD")
 
-    tested = find_metadata(parsed_record_content, dist_info_prefix, record_path)
+    tested = find_metadata(parsed_record_content, PurePath(dist_info_prefix), PurePath(record_path))
     assert tested == expected
 
 
@@ -105,10 +105,10 @@ def test_find_script():
 
 def test_find_package():
     dist_info_dir = PurePath("requests-2.22.0.dist-info/")
-    python3_sitedir = "/usr/lib/python3.7/site-packages"
-    python3_sitearch = "/usr/lib64/python3.7/site-packages"
+    python3_sitedir = PurePath("/usr/lib/python3.7/site-packages")
+    python3_sitearch = PurePath("/usr/lib64/python3.7/site-packages")
     record_content = read_record(RECORDS_PATH, "test_RECORD_requests")
-    record_path = os.path.join(python3_sitedir, dist_info_dir, "RECORD")
+    record_path = python3_sitedir / dist_info_dir / "RECORD"
     parsed_record_content = parse_record(record_path, record_content)
 
     tested = find_package(python3_sitedir, python3_sitearch, parsed_record_content)
@@ -176,9 +176,9 @@ del package
 def test_classify_paths(supposed_record_path, rel_record_path, expected):
     """test categorization of files"""
     root = str(Path(RECORDS_PATH).parent)
-    python3_sitelib = "/usr/lib/python3.7/site-packages"
-    python3_sitearch = "/usr/lib64/python3.7/site-packages"
-    bindir = "/usr/bin"
+    python3_sitelib = PurePath("/usr/lib/python3.7/site-packages")
+    python3_sitearch = PurePath("/usr/lib64/python3.7/site-packages")
+    bindir = PurePath("/usr/bin")
 
     record_contents = read_record(RECORDS_PATH, rel_record_path)
     record_contents = parse_record(supposed_record_path,
@@ -187,28 +187,29 @@ def test_classify_paths(supposed_record_path, rel_record_path, expected):
     output = classify_paths(supposed_record_path, record_contents, python3_sitelib, python3_sitearch, bindir)
     assert output == expected
 
-
-def test_warning_classify_paths():
-    """test categorization of files"""
-    supposed_record_path, rel_record_path = TEST_RECORDS["tensorflow"]
-    warned_files = PARAMETRIZED_EXPECTED_OUTPUT["tensorflow"]["other"]["files"]
-    root = str(Path(RECORDS_PATH).parent)
-    python3_sitelib = "/usr/lib/python3.7/site-packages"
-    python3_sitearch = "/usr/lib64/python3.7/site-packages"
-    bindir = "/usr/bin"
-
-    record_contents = read_record(RECORDS_PATH, rel_record_path)
-    record_contents = parse_record(supposed_record_path,
-                                   record_contents)
-
-    with pytest.warns(UserWarning) as record:
-        output = classify_paths(supposed_record_path, record_contents, python3_sitelib, python3_sitearch, bindir)
-
-    assert pformat(warned_files) in record[0].message.args[0]
+# right now there is no package which would have warning
+# def test_warning_classify_paths():
+#     """test categorization of files"""
+#     supposed_record_path, rel_record_path = TEST_RECORDS["tensorflow"]
+#     warned_files = PARAMETRIZED_EXPECTED_OUTPUT["tensorflow"]["other"]["files"]
+#     root = str(Path(RECORDS_PATH).parent)
+#     python3_sitelib = PurePath("/usr/lib/python3.7/site-packages")
+#     python3_sitearch = PurePath("/usr/lib64/python3.7/site-packages")
+#     bindir = PurePath("/usr/bin")
+#
+#     record_contents = read_record(RECORDS_PATH, rel_record_path)
+#     record_contents = parse_record(supposed_record_path,
+#                                    record_contents)
+#
+#     with pytest.warns(UserWarning) as record:
+#         output = classify_paths(PurePath(supposed_record_path), record_contents, python3_sitelib, python3_sitearch, bindir)
+#
+#     assert pformat(warned_files) in record[0].message.args[0]
 
 
 file_section = (
     ("tensorflow", "tensorflow*", sorted([
+        '/usr/lib/python3.7/site-packages/tensorflow_core/',
         "/usr/lib64/python3.7/site-packages/tensorflow/", "/usr/lib64/python3.7/site-packages/tensorflow_core/",
         "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/INSTALLER",
         "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/METADATA",
@@ -275,9 +276,9 @@ def test_generate_file_list_with_executables(package, glob, expected):
     executables = PARAMETRIZED_EXPECTED_OUTPUT[package]["executables"]["files"]
     modules_glob = (glob,)
     files = sorted(expected + executables)
-    record_path = TEST_RECORDS[package][0]
-    tested = generate_file_list(record_path, "/usr/lib/python3.7/site-packages",
-                                "/usr/lib64/python3.7/site-packages", paths_dict, modules_glob,
+    record_path = PurePath(TEST_RECORDS[package][0])
+    tested = generate_file_list(record_path, SITELIB,
+                                SITEARCH, paths_dict, modules_glob,
                                 include_executables=True)
     assert tested == files
 

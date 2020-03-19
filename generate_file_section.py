@@ -32,10 +32,11 @@ def locate_record(root: Path, python3_sitelib: PurePath, python3_sitearch: PureP
     return Path("/") / Path(delete_commonpath(record_path, root))
 
 
-def read_record(root: Path, record_path: Path) -> List[Any]:
+def read_record(root: Union[Path, str], record_path: Union[Path, str]) -> List[Any]:
     """returns parsed list of triplets like: [(path, hash, size), ...]"""
 
     root = Path(root)
+    record_path = Path(record_path)
     # can't join both absolute like paths properly
     try:
         record_path = Path(record_path).relative_to("/")
@@ -161,17 +162,16 @@ def find_package(python3_sitelib: PurePath, python3_sitearch: PurePath, parsed_r
     for sitedir in (python3_sitelib, python3_sitearch):
         #python_files = glob_filter(f"{sitedir}/**/*/*.py", parsed_record_content)
         python_files = pattern_filter(f"{re.escape(str(sitedir))}/.*/.*\\.py$", parsed_record_content)
-        sitedir = Path(sitedir)
-        for file in python_files:
-            file = Path(file)
-            if os.path.commonpath((sitedir, file)) == str(sitedir):
-                py_package = file.parts[:len(sitedir.parts) + 1]
-                py_package = "/".join(py_package) + "/"  # //usr/lib...
-                packages.add(py_package[1:])  # getting rid of unwanted /
 
+        sitedir_len = len(sitedir.parts)
+        for path in parsed_record_content:
+            if len(path.parts) > (sitedir_len + 1) and is_subpath(sitedir, path):
+                package = PurePath(*path.parts[:(sitedir_len + 1)])
+                if not ".dist-info" in package.name and not "__pycache__" == package.name:
+                    packages.add(f"{package}/")
     files: List[str] = []
     for package in packages:
-#        files += glob_filter(f"{package}**/*", parsed_record_content)
+        #files += glob_filter(f"{package}**/*", parsed_record_content)
         files += pattern_filter(f"{re.escape(package)}.*", parsed_record_content)
 
     return packages, files
@@ -204,6 +204,7 @@ def get_modules(packages: Tuple[List[set], List[str]], extension_files: Tuple[Li
             "type": "package",
             "files": [package],
         })
+
     for script in scripts:
         key = Path(script).stem
         if key not in modules:
