@@ -183,6 +183,7 @@ def find_executable(bindir: PurePath, parsed_record_content: List[PurePath]) -> 
     executables = []
     #    bindir_content = glob_filter(f"{bindir}/**/*", parsed_record_content)
     bindir_content = pattern_filter(f"{re.escape(str(bindir))}.*", parsed_record_content)
+    breakpoint()
     for file in bindir_content:
         # do not list .pyc files, because pyproject-rpm-macro deletes them in bindir
         if not file.endswith(".pyc"):
@@ -343,7 +344,7 @@ def pyproject_save_files(root: Path, python3_sitelib: PurePath, python3_sitearch
     """
     record_path = locate_record(root, python3_sitelib, python3_sitearch)
     parsed_record = parse_record(record_path, (read_record(root, record_path)))
-
+    breakpoint()
     paths_dict = classify_paths(record_path, parsed_record, python3_sitelib, python3_sitearch, bindir)
 
     files = generate_file_list(record_path, python3_sitelib, python3_sitearch,
@@ -357,7 +358,7 @@ parser.add_argument("path_to_save", help="Path to save list of paths for file se
 parser.add_argument('buildroot', type=lambda x: Path(x))
 parser.add_argument('python3_sitelib', type=lambda x: PurePath(x))
 parser.add_argument('python3_sitearch', type=lambda x: PurePath(x))
-parser.add_argument('bindir', type=lambda x: PurePath)
+parser.add_argument('bindir', type=lambda x: PurePath(x))
 parser.add_argument("globs_to_save", nargs="+")
 
 
