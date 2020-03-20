@@ -6,7 +6,6 @@ Version: 3.1.0
 Release: 9%{?dist}
 License: Python
 Summary: An object-oriented API to access LDAP directory servers
-URL: http://python-ldap.org/
 Source0: %{pypi_source}
 
 BuildRequires: pyproject-rpm-macros
@@ -33,9 +32,6 @@ Building this tests:
 Summary:        %{summary}
 
 Requires:  openldap
-Requires:  python3-pyasn1 >= 0.3.7
-Requires:  python3-pyasn1-modules >= 0.1.5
-Requires:  python3-setuptools
 %{?python_provide:%python_provide python3-ldap}
 
 %description -n python3-ldap
@@ -45,9 +41,6 @@ Requires:  python3-setuptools
 %prep
 %setup -q -n %{name}-%{version}%{?prerelease}
 
-# Disable warnings in test to work around "'U' mode is deprecated"
-# https://github.com/python-ldap/python-ldap/issues/96
-sed -i 's,-Werror,-Wignore,g' tox.ini
 
 
 %generate_buildrequires
@@ -64,10 +57,7 @@ sed -i 's,-Werror,-Wignore,g' tox.ini
 
 
 %check
-# don't download packages
-#export PIP_INDEX_URL=http://host.invalid./
-#export PIP_NO_DEPS=yes
-LOGLEVEL=10 %tox
+%tox
 
 # check if the instalation outputs expected files
 test -d "%{buildroot}%{python3_sitearch}/__pycache__/" 
