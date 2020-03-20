@@ -317,11 +317,10 @@ parser.add_argument("globs_to_save", nargs="+")
 
 
 def main(cli_args):
-    args = cli_args.__dict__
-    path_to_save = args.pop("path_to_save")
-    file_section = pyproject_save_files(*args.values())
+    file_section = pyproject_save_files(cli_args.buildroot, cli_args.python3_sitelib, cli_args.python3_sitearch,
+                                        cli_args.bindir, cli_args.globs_to_save)
 
-    with open(path_to_save, "w") as file:
+    with open(cli_args.path_to_save, "w") as file:
         file.writelines([path + "\n" for path in file_section])
 
 
