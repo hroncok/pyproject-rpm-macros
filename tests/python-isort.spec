@@ -25,14 +25,15 @@ Summary:            %{summary}
 
 %prep
 %autosetup -n %{modname}-%{version}-2
+
+
 %generate_buildrequires
 %pyproject_buildrequires -r
 
-# Drop shebang
-#sed -i -e '1{\@^#!.*@d}' %{modname}/main.py
 
 %build
 %pyproject_wheel
+
 
 %install
 %pyproject_install
