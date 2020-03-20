@@ -366,31 +366,3 @@ def test_find_too_many_RECORDS(tmp_path):
     with pytest.raises(FileExistsError):
         main(cli_args)
 
-
-def test_glob_filter_simple():
-    test_list = [PurePath('/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/RECORD')]
-    assert glob_filter("*dist-info/RECORD", test_list) == ['/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/RECORD']
-
-
-def test_glob_filter_recursive_glob_simple():
-    test_list = [PurePath('/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/RECORD')]
-    assert glob_filter("/**/*dist-info/RECORD", test_list) == [
-        '/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/RECORD']
-
-
-def test_glob_filter_recursive_glob():
-    test_list = [PurePath('/usr/lib/python3.7/site-packages/requests/requests_main/main.py')]
-    assert glob_filter('/usr/lib/python3.7/site-packages/requests/**/*.py', test_list) == [
-        '/usr/lib/python3.7/site-packages/requests/requests_main/main.py']
-
-
-def test_glob_filter_recursive_glob_not_match():
-    test_list = [PurePath('/usr/lib/python3.7/site-packages/requests/main.py')]
-    tested = glob_filter('/usr/lib/python3.7/site-packages/requests/**/*/*.py', test_list)
-    assert tested == []
-
-
-def test_glob_filter_recursive_match():
-    test_list = [PurePath('/usr/lib/python3.8/site-packages/isort/utils.py')]
-    tested = glob_filter('/usr/lib/python3.8/site-packages/**/*/*.py', test_list)
-    assert tested == ['/usr/lib/python3.8/site-packages/isort/utils.py']
