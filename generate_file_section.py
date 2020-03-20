@@ -32,7 +32,7 @@ def locate_record(root: Path, python3_sitelib: PurePath, python3_sitearch: PureP
     return Path("/") / Path(delete_commonpath(record_path, root))
 
 
-def read_record(root: Union[Path, str], record_path: Union[Path, str]) -> List[Any]:
+def read_record(root: Union[Path, str], record_path: Union[Path, str]):
     """returns parsed list of triplets like: [(path, hash, size), ...]"""
 
     root = Path(root)
@@ -45,7 +45,7 @@ def read_record(root: Union[Path, str], record_path: Union[Path, str]) -> List[A
 
     with open(root / record_path, newline='', encoding='utf-8') as f:
         content = csv.reader(f, delimiter=',', quotechar='"', lineterminator=os.linesep)
-        return list(content)
+        yield from content
 
 
 def parse_record(record_path: Union[Path, str], record_content: List[Tuple[str, str, str]]) -> List[PurePath]:
