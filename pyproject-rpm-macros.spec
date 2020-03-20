@@ -9,8 +9,8 @@ Version:        0
 Release:        14%{?dist}
 Source0:        macros.pyproject
 Source1:        pyproject_buildrequires.py
-Source2:        generate_file_section.py
-Source3:        test_generate_file_section.py
+Source2:        pyproject_save_files.py
+Source3:        test_pyproject_save_files.py
 Source4:        classify_paths_output.py
 
 
@@ -18,7 +18,7 @@ Source8:        README.md
 Source9:        LICENSE
 
 Source10:       test_pyproject_buildrequires.py
-Source11:       testcases.yaml
+Source11:       pyproject_buildrequires_testcases.yaml
 
 Source12:       test_RECORD_kerberos
 Source13:       test_RECORD_requests
@@ -82,7 +82,7 @@ mkdir -p %{buildroot}%{_rpmmacrodir}
 mkdir -p %{buildroot}%{_rpmconfigdir}/redhat
 install -m 644 macros.pyproject %{buildroot}%{_rpmmacrodir}/
 install -m 644 pyproject_buildrequires.py %{buildroot}%{_rpmconfigdir}/redhat/
-install -m 644 generate_file_section.py  %{buildroot}%{_rpmconfigdir}/redhat/
+install -m 644 pyproject_save_files.py  %{buildroot}%{_rpmconfigdir}/redhat/
 %if %{with tests}
 %check
 %{__python3} -m pytest -vv
@@ -92,7 +92,7 @@ install -m 644 generate_file_section.py  %{buildroot}%{_rpmconfigdir}/redhat/
 %files
 %{_rpmmacrodir}/macros.pyproject
 %{_rpmconfigdir}/redhat/pyproject_buildrequires.py
-%{_rpmconfigdir}/redhat/generate_file_section.py
+%{_rpmconfigdir}/redhat/pyproject_save_files.py
 %doc README.md
 %license LICENSE
 

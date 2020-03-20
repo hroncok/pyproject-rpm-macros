@@ -12,7 +12,7 @@ except ImportError:
     import importlib_metadata
 
 testcases = {}
-with Path(__file__).parent.joinpath('testcases.yaml').open() as f:
+with Path(__file__).parent.joinpath('pyproject_buildrequires_testcases.yaml').open() as f:
     testcases = yaml.safe_load(f)
 
 

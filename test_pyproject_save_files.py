@@ -3,8 +3,8 @@ import os
 from pathlib import Path
 from pprint import pprint
 from pprint import pformat
-import generate_file_section
-from generate_file_section import *
+import pyproject_save_files
+from pyproject_save_files import *
 import tempfile
 import warnings
 from pathlib import PurePath
