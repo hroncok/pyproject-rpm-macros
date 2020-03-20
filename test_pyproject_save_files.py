@@ -163,7 +163,10 @@ TEST_RECORDS = {
 }
 
 test_data = []
-from classify_paths_output import PARAMETRIZED_EXPECTED_OUTPUT
+import json
+with open(f"{RECORDS_PATH}/pyproject_save_files_test_data.json", "r", encoding='utf-8') as file:
+    PARAMETRIZED_EXPECTED_OUTPUT = json.loads(file.read(), encoding='utf-8')
+
 
 for package in TEST_RECORDS:
     test_data.append((*TEST_RECORDS[package], PARAMETRIZED_EXPECTED_OUTPUT[package]))

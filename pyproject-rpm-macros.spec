@@ -11,7 +11,7 @@ Source0:        macros.pyproject
 Source1:        pyproject_buildrequires.py
 Source2:        pyproject_save_files.py
 Source3:        test_pyproject_save_files.py
-Source4:        classify_paths_output.py
+Source4:        pyproject_save_files_test_data.json
 
 
 Source8:        README.md
