@@ -45,5 +45,5 @@ tox --current-env -q --recreate -e "%{-e:%{-e*}}%{!-e:%{toxenv}}" %{?*}
 }
 
 %pyproject_save_files() %{expand:\\\
-%{__python3} %{_rpmconfigdir}/redhat/generate_file_section.py %{pyproject_files} %{buildroot} %{python3_sitelib} %{python3_sitearch} %{_bindir} %{*}
+%{__python3} %{_rpmconfigdir}/redhat/pyproject_save_files.py %{pyproject_files} %{buildroot} %{python3_sitelib} %{python3_sitearch} %{_bindir} %{*}
 }
