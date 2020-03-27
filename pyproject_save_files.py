@@ -83,7 +83,7 @@ def read_record(record_path):
 
 def parse_record(record_path, record_content):
     """
-    Returns a list of absolute buildroot paths
+    Returns a generator with absolute buildroot paths parsed from record_content
 
     params:
     record_path: RECORD buildroot path
@@ -92,14 +92,12 @@ def parse_record(record_path, record_content):
 
     Example:
 
-        >>> parse_record("/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/RECORD", [("requests/sessions.py", ...), ...])
-        [PurePosixPath("/usr/lib/python3.7/site-packages/requests/sessions.py"), ...]
-
-    TODO make this a generator once we only read this once
+        >>> next(parse_record("/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/RECORD", [("requests/sessions.py", ...), ...]))
+        PurePosixPath("/usr/lib/python3.7/site-packages/requests/sessions.py")
     """
     sitedir = record_path.parent.parent  # trough the dist-info directory
     # PurePaths don't have .resolve(), so we make a trip to str and back :(
-    return [PurePath(os.path.normpath(sitedir / row[0])) for row in record_content]
+    return (PurePath(os.path.normpath(sitedir / row[0])) for row in record_content)
 
 
 def pycached(script):
