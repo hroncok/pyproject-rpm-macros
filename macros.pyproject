@@ -22,8 +22,15 @@ if [ -d %{buildroot}%{python3_sitearch} ]; then
 fi
 }
 
+
+%pyproject_save_files() %{expand:\\\
+%{__python3} %{_rpmconfigdir}/redhat/pyproject_save_files.py %{pyproject_files} %{buildroot} %{python3_sitelib} %{python3_sitearch} %{_bindir} %{*}
+}
+
+
 %default_toxenv py%{python3_version_nodots}
 %toxenv %{default_toxenv}
+
 
 %pyproject_buildrequires(rxte:) %{expand:\\\
 %{-e:%{expand:%global toxenv %{-e*}}}
@@ -37,13 +44,10 @@ if [ -f %{__python3} ]; then
 fi
 }
 
+
 %tox(e:) %{expand:\\\
 TOX_TESTENV_PASSENV="${TOX_TESTENV_PASSENV:-*}" \\
 PATH="%{buildroot}%{_bindir}:$PATH" \\
 PYTHONPATH="${PYTHONPATH:-%{buildroot}%{python3_sitearch}:%{buildroot}%{python3_sitelib}}" \\
 tox --current-env -q --recreate -e "%{-e:%{-e*}}%{!-e:%{toxenv}}" %{?*}
-}
-
-%pyproject_save_files() %{expand:\\\
-%{__python3} %{_rpmconfigdir}/redhat/pyproject_save_files.py %{pyproject_files} %{buildroot} %{python3_sitelib} %{python3_sitearch} %{_bindir} %{*}
 }
