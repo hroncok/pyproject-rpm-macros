@@ -1,199 +1,286 @@
 {
-  "requests": {
-    "executables": {
-      "files": []
-    },
-    "metadata": {
-      "dirs": [
-        "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info"
-      ],
-      "docs": [],
-      "files": [
-        "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/INSTALLER",
-        "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/LICENSE",
-        "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/METADATA",
-        "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/RECORD",
-        "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/WHEEL",
-        "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/top_level.txt"
-      ],
-      "licenses": []
-    },
-    "modules": {
-      "requests": [
-        {
-          "type": "package",
-          "files": [
-            "/usr/lib/python3.7/site-packages/requests"
-          ]
-        }
-      ]
-    },
-    "other": {
-      "files": []
-    }
-  },
-  "kerberos": {
-    "executables": {
-      "files": []
-    },
-    "metadata": {
-      "dirs": [
-        "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info"
-      ],
-      "docs": [],
-      "files": [
-        "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/INSTALLER",
-        "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/METADATA",
-        "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/RECORD",
-        "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/WHEEL",
-        "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/top_level.txt"
-      ],
-      "licenses": []
-    },
-    "modules": {
-      "kerberos": [
-        {
-          "type": "extension",
-          "files": [
-            "/usr/lib64/python3.7/site-packages/kerberos.cpython-37m-x86_64-linux-gnu.so"
-          ]
-        }
-      ]
-    },
-    "other": {
-      "files": []
-    }
-  },
-  "tldr": {
-    "executables": {
-      "files": [
-        "/usr/bin/tldr",
-        "/usr/bin/tldr.py"
-      ]
-    },
-    "metadata": {
-      "dirs": [
-        "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info"
-      ],
-      "docs": [],
-      "files": [
-        "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/INSTALLER",
-        "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/LICENSE",
-        "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/METADATA",
-        "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/RECORD",
-        "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/WHEEL",
-        "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/top_level.txt"
-      ],
-      "licenses": []
-    },
-    "modules": {
-      "tldr": [
-        {
-          "type": "script",
-          "files": [
-            "/usr/lib/python3.7/site-packages/tldr.py",
-            "/usr/lib/python3.7/site-packages/__pycache__/tldr.cpython-37{,.opt-?}.pyc"
-          ]
-        }
-      ]
-    },
-    "other": {
-      "files": []
-    }
-  },
-  "tensorflow": {
-    "metadata": {
-      "dirs": [
-        "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info"
-      ],
-      "docs": [],
-      "files": [
-        "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/INSTALLER",
-        "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/METADATA",
-        "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/RECORD",
-        "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/WHEEL",
-        "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/entry_points.txt",
-        "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/top_level.txt"
-      ],
-      "licenses": []
-    },
-    "modules": {
-      "tensorflow": [
-        {
-          "files": [
-            "/usr/lib64/python3.7/site-packages/tensorflow"
-          ],
-          "type": "package"
-        }
-      ],
-      "tensorflow_core": [
-        {
-          "files": [
-            "/usr/lib64/python3.7/site-packages/tensorflow_core"
-          ],
-          "type": "package"
+    "classified": {
+        "kerberos": {
+            "executables": {
+                "files": []
+            },
+            "metadata": {
+                "dirs": [
+                    "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info"
+                ],
+                "docs": [],
+                "files": [
+                    "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/INSTALLER",
+                    "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/METADATA",
+                    "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/RECORD",
+                    "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/WHEEL",
+                    "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/top_level.txt"
+                ],
+                "licenses": []
+            },
+            "modules": {
+                "kerberos": [
+                    {
+                        "files": [
+                            "/usr/lib64/python3.7/site-packages/kerberos.cpython-37m-x86_64-linux-gnu.so"
+                        ],
+                        "type": "extension"
+                    }
+                ]
+            },
+            "other": {
+                "files": []
+            }
         },
-        {
-          "files": [
-            "/usr/lib/python3.7/site-packages/tensorflow_core"
-          ],
-          "type": "package"
-        }
-      ]
-    },
-    "executables": {
-      "files": [
-        "/usr/bin/estimator_ckpt_converter",
-        "/usr/bin/saved_model_cli",
-        "/usr/bin/tensorboard",
-        "/usr/bin/tf_upgrade_v2",
-        "/usr/bin/tflite_convert",
-        "/usr/bin/toco",
-        "/usr/bin/toco_from_protos"
-      ]
-    },
-    "other": {
-      "files": []
-    }
-  },
-  "mistune": {
-    "executables": {
-      "files": []
-    },
-    "metadata": {
-      "dirs": [
-        "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info"
-      ],
-      "docs": [],
-      "files": [
-        "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/INSTALLER",
-        "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/LICENSE",
-        "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/METADATA",
-        "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/RECORD",
-        "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/WHEEL",
-        "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/top_level.txt"
-      ],
-      "licenses": []
-    },
-    "modules": {
-      "mistune": [
-        {
-          "type": "script",
-          "files": [
-            "/usr/lib64/python3.7/site-packages/mistune.py",
-            "/usr/lib64/python3.7/site-packages/__pycache__/mistune.cpython-37{,.opt-?}.pyc"
-          ]
+        "mistune": {
+            "executables": {
+                "files": []
+            },
+            "metadata": {
+                "dirs": [
+                    "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info"
+                ],
+                "docs": [],
+                "files": [
+                    "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/INSTALLER",
+                    "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/LICENSE",
+                    "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/METADATA",
+                    "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/RECORD",
+                    "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/WHEEL",
+                    "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/top_level.txt"
+                ],
+                "licenses": []
+            },
+            "modules": {
+                "mistune": [
+                    {
+                        "files": [
+                            "/usr/lib64/python3.7/site-packages/mistune.py",
+                            "/usr/lib64/python3.7/site-packages/__pycache__/mistune.cpython-37{,.opt-?}.pyc"
+                        ],
+                        "type": "script"
+                    },
+                    {
+                        "files": [
+                            "/usr/lib64/python3.7/site-packages/mistune.cpython-37m-x86_64-linux-gnu.so"
+                        ],
+                        "type": "extension"
+                    }
+                ]
+            },
+            "other": {
+                "files": []
+            }
         },
-        {
-          "type": "extension",
-          "files": [
-            "/usr/lib64/python3.7/site-packages/mistune.cpython-37m-x86_64-linux-gnu.so"
-          ]
+        "requests": {
+            "executables": {
+                "files": []
+            },
+            "metadata": {
+                "dirs": [
+                    "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info"
+                ],
+                "docs": [],
+                "files": [
+                    "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/INSTALLER",
+                    "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/LICENSE",
+                    "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/METADATA",
+                    "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/RECORD",
+                    "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/WHEEL",
+                    "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/top_level.txt"
+                ],
+                "licenses": []
+            },
+            "modules": {
+                "requests": [
+                    {
+                        "files": [
+                            "/usr/lib/python3.7/site-packages/requests"
+                        ],
+                        "type": "package"
+                    }
+                ]
+            },
+            "other": {
+                "files": []
+            }
+        },
+        "tensorflow": {
+            "executables": {
+                "files": [
+                    "/usr/bin/estimator_ckpt_converter",
+                    "/usr/bin/saved_model_cli",
+                    "/usr/bin/tensorboard",
+                    "/usr/bin/tf_upgrade_v2",
+                    "/usr/bin/tflite_convert",
+                    "/usr/bin/toco",
+                    "/usr/bin/toco_from_protos"
+                ]
+            },
+            "metadata": {
+                "dirs": [
+                    "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info"
+                ],
+                "docs": [],
+                "files": [
+                    "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/INSTALLER",
+                    "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/METADATA",
+                    "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/RECORD",
+                    "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/WHEEL",
+                    "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/entry_points.txt",
+                    "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/top_level.txt"
+                ],
+                "licenses": []
+            },
+            "modules": {
+                "tensorflow": [
+                    {
+                        "files": [
+                            "/usr/lib64/python3.7/site-packages/tensorflow"
+                        ],
+                        "type": "package"
+                    }
+                ],
+                "tensorflow_core": [
+                    {
+                        "files": [
+                            "/usr/lib64/python3.7/site-packages/tensorflow_core"
+                        ],
+                        "type": "package"
+                    },
+                    {
+                        "files": [
+                            "/usr/lib/python3.7/site-packages/tensorflow_core"
+                        ],
+                        "type": "package"
+                    }
+                ]
+            },
+            "other": {
+                "files": []
+            }
+        },
+        "tldr": {
+            "executables": {
+                "files": [
+                    "/usr/bin/tldr",
+                    "/usr/bin/tldr.py"
+                ]
+            },
+            "metadata": {
+                "dirs": [
+                    "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info"
+                ],
+                "docs": [],
+                "files": [
+                    "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/INSTALLER",
+                    "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/LICENSE",
+                    "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/METADATA",
+                    "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/RECORD",
+                    "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/WHEEL",
+                    "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/top_level.txt"
+                ],
+                "licenses": []
+            },
+            "modules": {
+                "tldr": [
+                    {
+                        "files": [
+                            "/usr/lib/python3.7/site-packages/tldr.py",
+                            "/usr/lib/python3.7/site-packages/__pycache__/tldr.cpython-37{,.opt-?}.pyc"
+                        ],
+                        "type": "script"
+                    }
+                ]
+            },
+            "other": {
+                "files": []
+            }
         }
-      ]
     },
-    "other": {
-      "files": []
-    }
-  }
+    "dumped": [
+        [
+            "tensorflow",
+            "tensorflow*",
+            [
+                "%dir /usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info",
+                "/usr/bin/estimator_ckpt_converter",
+                "/usr/bin/saved_model_cli",
+                "/usr/bin/tensorboard",
+                "/usr/bin/tf_upgrade_v2",
+                "/usr/bin/tflite_convert",
+                "/usr/bin/toco",
+                "/usr/bin/toco_from_protos",
+                "/usr/lib/python3.7/site-packages/tensorflow_core/",
+                "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/INSTALLER",
+                "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/METADATA",
+                "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/RECORD",
+                "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/WHEEL",
+                "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/entry_points.txt",
+                "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/top_level.txt",
+                "/usr/lib64/python3.7/site-packages/tensorflow/",
+                "/usr/lib64/python3.7/site-packages/tensorflow_core/"
+            ]
+        ],
+        [
+            "kerberos",
+            "ke?ber*",
+            [
+                "%dir /usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info",
+                "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/INSTALLER",
+                "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/METADATA",
+                "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/RECORD",
+                "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/WHEEL",
+                "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/top_level.txt",
+                "/usr/lib64/python3.7/site-packages/kerberos.cpython-37m-x86_64-linux-gnu.so"
+            ]
+        ],
+        [
+            "requests",
+            "requests",
+            [
+                "%dir /usr/lib/python3.7/site-packages/requests-2.22.0.dist-info",
+                "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/INSTALLER",
+                "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/LICENSE",
+                "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/METADATA",
+                "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/RECORD",
+                "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/WHEEL",
+                "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/top_level.txt",
+                "/usr/lib/python3.7/site-packages/requests/"
+            ]
+        ],
+        [
+            "tldr",
+            "*",
+            [
+                "%dir /usr/lib/python3.7/site-packages/tldr-0.5.dist-info",
+                "/usr/bin/tldr",
+                "/usr/bin/tldr.py",
+                "/usr/lib/python3.7/site-packages/__pycache__/tldr.cpython-37{,.opt-?}.pyc",
+                "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/INSTALLER",
+                "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/LICENSE",
+                "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/METADATA",
+                "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/RECORD",
+                "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/WHEEL",
+                "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/top_level.txt",
+                "/usr/lib/python3.7/site-packages/tldr.py"
+            ]
+        ],
+        [
+            "mistune",
+            "mistune",
+            [
+                "%dir /usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info",
+                "/usr/lib64/python3.7/site-packages/__pycache__/mistune.cpython-37{,.opt-?}.pyc",
+                "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/INSTALLER",
+                "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/LICENSE",
+                "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/METADATA",
+                "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/RECORD",
+                "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/WHEEL",
+                "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/top_level.txt",
+                "/usr/lib64/python3.7/site-packages/mistune.cpython-37m-x86_64-linux-gnu.so",
+                "/usr/lib64/python3.7/site-packages/mistune.py"
+            ]
+        ]
+    ]
 }

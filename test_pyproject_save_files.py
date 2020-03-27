@@ -1,4 +1,4 @@
-import os
+import json
 import pytest
 import shutil
 import sys
@@ -10,9 +10,15 @@ from pyproject_save_files import argparser, generate_file_list, main
 from pyproject_save_files import parse_globs, parse_record, read_record
 
 
-RECORDS_PATH = Path(__file__).parent
+RECORDS = Path(__file__).parent
+BINDIR = PurePath("/usr/bin")
 SITELIB = PurePath("/usr/lib/python3.7/site-packages")
 SITEARCH = PurePath("/usr/lib64/python3.7/site-packages")
+
+json_file = RECORDS / "pyproject_save_files_test_data.json"
+json_data = json.loads(json_file.read_text())
+EXPECTED_DICT = json_data["classified"]
+EXPECTED_FILES = json_data["dumped"]
 
 
 @pytest.fixture(autouse=True)
@@ -22,10 +28,12 @@ def _fake_version(monkeypatch):
     We only support running this for 3.7 packages on 3.7 etc.
     Hence in tests, we fake our version.
     """
+
     class version_info(tuple):
         major = 3
         minor = 7
         patch = 100
+
         def __new__(cls):
             return super().__new__(cls, (3, 7, 100))
 
@@ -33,145 +41,76 @@ def _fake_version(monkeypatch):
 
 
 def test_parse_record_kerberos():
-    """test if RECORD file is parsed properly"""
-    record_content = read_record(RECORDS_PATH / "test_RECORD_kerberos")
-    output = list(parse_record(PurePath("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/RECORD"), record_content))
-    expected = [PurePath("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/INSTALLER"),
-                PurePath("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/METADATA"),
-                PurePath("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/RECORD"),
-                PurePath("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/WHEEL"),
-                PurePath("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/top_level.txt"),
-                PurePath("/usr/lib64/python3.7/site-packages/kerberos.cpython-37m-x86_64-linux-gnu.so")]
+    record_path = SITEARCH / "kerberos-1.3.0.dist-info/RECORD"
+    record_content = read_record(RECORDS / "test_RECORD_kerberos")
+    output = list(parse_record(record_path, record_content))
+    pprint(output)
+    expected = [
+        SITEARCH / "kerberos-1.3.0.dist-info/INSTALLER",
+        SITEARCH / "kerberos-1.3.0.dist-info/METADATA",
+        SITEARCH / "kerberos-1.3.0.dist-info/RECORD",
+        SITEARCH / "kerberos-1.3.0.dist-info/WHEEL",
+        SITEARCH / "kerberos-1.3.0.dist-info/top_level.txt",
+        SITEARCH / "kerberos.cpython-37m-x86_64-linux-gnu.so",
+    ]
     assert output == expected
 
 
 def test_parse_record_tensorflow():
-    """test if RECORD file is parsed properly"""
-    dist_info_dir = "tensorflow-2.1.0.dist-info"
-    dist_info_prefix = "/usr/lib64/python3.7/site-packages"
-
+    long = "tensorflow_core/include/tensorflow/core/common_runtime/base_collective_executor.h"
+    record_path = SITEARCH / "tensorflow-2.1.0.dist-info/RECORD"
     record_content = [
-        ["../../../bin/toco_from_protos", "sha256=W1RBTgnD8F2jVoq2RiIfW_Ph6HNm7Kw0Jz-1_4MANDU", "289"],
-        [
-            "../../../lib/python3.7/site-packages/tensorflow_core/include/tensorflow/core/common_runtime/base_collective_executor.h",
-            "sha256=7RAlc1tDVIXyRwVp3YaGHzQb9xzSXwUh89XYdN2JE-c", "1024"],
-        ["tensorflow-2.1.0.dist-info/METADATA", "sha256=g5W3QfLBbDHaqVmDvLXQIV2KfDFQe9zssq4fKz-Rah4", "2859"],
+        ["../../../bin/toco_from_protos", "sha256=hello", "289"],
+        [f"../../../lib/python3.7/site-packages/{long}", "sha256=darkness", "1024"],
+        ["tensorflow-2.1.0.dist-info/METADATA", "sha256=friend", "2859"],
     ]
-    output = list(parse_record(PurePath(f"{dist_info_prefix}/{dist_info_dir}/RECORD"), record_content))
-
+    output = list(parse_record(record_path, record_content))
     pprint(output)
-    expected = [PurePath('/usr/bin/toco_from_protos'),
-                PurePath('/usr/lib/python3.7/site-packages/tensorflow_core/include/tensorflow/core/common_runtime/base_collective_executor.h'),
-                PurePath('/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/METADATA'),
-                ]
+    expected = [
+        BINDIR / "toco_from_protos",
+        SITELIB / long,
+        SITEARCH / "tensorflow-2.1.0.dist-info/METADATA",
+    ]
     assert output == expected
 
 
-# [packagename: (expected path in buildroot, relative path to test RECORD file)]
+# packagename: expected path in buildroot
 TEST_RECORDS = {
-    "kerberos": ("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/RECORD", "test_RECORD_kerberos"),
-    "requests": ("/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/RECORD", "test_RECORD_requests"),
-    "tensorflow": ("/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/RECORD", "test_RECORD_tensorflow"),
-    "tldr": ("/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/RECORD", "test_RECORD_tldr"),
-    "mistune": ("/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/RECORD", "test_RECORD_mistune")
+    "kerberos": SITEARCH / "kerberos-1.3.0.dist-info/RECORD",
+    "requests": SITELIB / "requests-2.22.0.dist-info/RECORD",
+    "tensorflow": SITEARCH / "tensorflow-2.1.0.dist-info/RECORD",
+    "tldr": SITELIB / "tldr-0.5.dist-info/RECORD",
+    "mistune": SITEARCH / "mistune-0.8.3.dist-info/RECORD",
 }
 
-test_data = []
-import json
-with open(f"{RECORDS_PATH}/pyproject_save_files_test_data.json", "r", encoding='utf-8') as file:
-    PARAMETRIZED_EXPECTED_OUTPUT = json.loads(file.read())
+
+def remove_executables(expected):
+    return [p for p in expected if not p.startswith(str(BINDIR))]
 
 
-for package in TEST_RECORDS:
-    test_data.append((*TEST_RECORDS[package], PARAMETRIZED_EXPECTED_OUTPUT[package]))
+@pytest.mark.parametrize("include_executables", (True, False))
+@pytest.mark.parametrize("package, glob, expected", EXPECTED_FILES)
+def test_generate_file_list(package, glob, expected, include_executables):
+    paths_dict = EXPECTED_DICT[package]
+    modules_glob = (glob,)
+    if not include_executables:
+        expected = remove_executables(expected)
+    tested = generate_file_list(paths_dict, modules_glob, include_executables)
 
-del package
+    assert tested == expected
 
-file_section = (
-    ("tensorflow", "tensorflow*", sorted([
-        '/usr/lib/python3.7/site-packages/tensorflow_core/',
-        "/usr/lib64/python3.7/site-packages/tensorflow/", "/usr/lib64/python3.7/site-packages/tensorflow_core/",
-        "%dir /usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info",
-        "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/INSTALLER",
-        "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/METADATA",
-        "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/RECORD",
-        "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/WHEEL",
-        "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/entry_points.txt",
-        "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/top_level.txt",
-    ])),
-    ("kerberos", "ke?ber*", sorted(["/usr/lib64/python3.7/site-packages/kerberos.cpython-37m-x86_64-linux-gnu.so",
-                             "%dir /usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info",
-                             "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/INSTALLER",
-                             "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/METADATA",
-                             "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/RECORD",
-                             "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/WHEEL",
-                             "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/top_level.txt",
-                             ])),
-    ("requests", "requests", sorted(["/usr/lib/python3.7/site-packages/requests/",
-                              "%dir /usr/lib/python3.7/site-packages/requests-2.22.0.dist-info",
-                              "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/INSTALLER",
-                              "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/LICENSE",
-                              "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/METADATA",
-                              "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/RECORD",
-                              "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/WHEEL",
-                              "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/top_level.txt",
-                              ])),
-    ("tldr", "tldr", sorted(["/usr/lib/python3.7/site-packages/__pycache__/tldr.cpython-37{,.opt-?}.pyc",
-                              "/usr/lib/python3.7/site-packages/tldr.py",
-                              "%dir /usr/lib/python3.7/site-packages/tldr-0.5.dist-info",
-                              "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/INSTALLER",
-                              "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/LICENSE",
-                              "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/METADATA",
-                              "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/RECORD",
-                              "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/WHEEL",
-                              "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/top_level.txt",
-                              ])),
 
-    ("mistune", "mistune", sorted([
-        "/usr/lib64/python3.7/site-packages/__pycache__/mistune.cpython-37{,.opt-?}.pyc",
-        "%dir /usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info",
-        "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/INSTALLER",
-        "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/LICENSE",
-        "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/METADATA",
-        "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/RECORD",
-        "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/WHEEL",
-        "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/top_level.txt",
-        "/usr/lib64/python3.7/site-packages/mistune.py",
-        "/usr/lib64/python3.7/site-packages/mistune.cpython-37m-x86_64-linux-gnu.so"
-    ]))
+@pytest.mark.parametrize(
+    "arguments, output",
+    [
+        (["requests*", "kerberos", "+bindir"], (["requests*", "kerberos"], True)),
+        (["tldr", "tensorf*"], (["tldr", "tensorf*"], False)),
+        (["+bindir"], ([], True)),
+        (["+kinkdir"], (["+kinkdir"], False)),
+    ],
 )
-
-
-@pytest.mark.parametrize("package, glob, expected", file_section)
-def test_generate_file_list(package, glob, expected):
-    """test glob at output of classify_paths"""
-    paths_dict = PARAMETRIZED_EXPECTED_OUTPUT[package]
-    modules_glob = (glob,)
-    record_path = TEST_RECORDS[package][0]
-    tested = generate_file_list(paths_dict, modules_glob, False)
-
-    assert tested == expected
-
-
-@pytest.mark.parametrize("package, glob, expected", file_section)
-def test_generate_file_list_with_executables(package, glob, expected):
-    """test glob at output of classify_paths"""
-    paths_dict = PARAMETRIZED_EXPECTED_OUTPUT[package]
-    executables = PARAMETRIZED_EXPECTED_OUTPUT[package]["executables"]["files"]
-    modules_glob = (glob,)
-    files = sorted(expected + executables)
-    record_path = PurePath(TEST_RECORDS[package][0])
-    tested = generate_file_list(paths_dict, modules_glob,
-                                include_executables=True)
-    assert tested == files
-
-
-def test_parse_globs():
-    tested = [parse_globs(["requests*", "kerberos", "+bindir"]),
-              parse_globs(["tldr", "tensorf*"])]
-
-    expected = [(["requests*", "kerberos"], True), (["tldr", "tensorf*"], False)]
-    assert tested == expected
+def test_parse_globs(arguments, output):
+    assert parse_globs(arguments) == output
 
 
 def create_root(tmp_path, record_path, rel_path_record):
@@ -184,68 +123,73 @@ def create_root(tmp_path, record_path, rel_path_record):
 
     example:
     create_root(tmp_path, '/usr/lib/python/tldr-0.5.dist-info/RECORD', 'test_RECORD_tldr')
-    -> copy RECORD file and creates subdirectories tmp/buildroot/usr/lib/python/tldr-0.5.dist-info/RECORD'
+    -> copy RECORD file and creates subdirectories in 'tmp/buildroot/usr/lib/python/tldr-0.5.dist-info/RECORD'
     """
 
-    dist_info_path =  "/".join(record_path.split("/")[:-1])
-    src = os.path.join(RECORDS_PATH, rel_path_record)
-    dest = f"{tmp_path}/buildroot/{record_path}"
-    os.makedirs(f"{tmp_path}/buildroot/{dist_info_path}")
+    src = RECORDS / rel_path_record
+    buildroot = tmp_path / "buildroot"
+    dest = buildroot / record_path.relative_to("/")
+    dest.parent.mkdir(parents=True)
     shutil.copy(src, dest)
-    return f"{tmp_path}/buildroot/"
+    return tmp_path / buildroot
 
 
-@pytest.mark.parametrize("package, glob, expected", file_section)
-def test_cli(tmp_path, package, glob, expected):
-    """test cli"""
-
-    mock_root = create_root(tmp_path, *TEST_RECORDS[package])
-    buildir = tmp_path / "builddir"
-    buildir.mkdir()
-    pyproject_files_path = buildir / "files"
-    cli_args = argparser().parse_args([str(pyproject_files_path),
-                                  mock_root,
-                                  "/usr/lib/python3.7/site-packages",
-                                  "/usr/lib64/python3.7/site-packages", "/usr/bin", glob])
-
+@pytest.mark.parametrize("include_executables", (True, False))
+@pytest.mark.parametrize("package, glob, expected", EXPECTED_FILES)
+def test_cli(tmp_path, package, glob, expected, include_executables):
+    mock_root = create_root(tmp_path, TEST_RECORDS[package], f"test_RECORD_{package}")
+    pyproject_files_path = tmp_path / "files"
+    globs = [glob, "+bindir"] if include_executables else [glob]
+    cli_args = argparser().parse_args(
+        [
+            str(pyproject_files_path),
+            str(mock_root),
+            str(SITELIB),
+            str(SITEARCH),
+            str(BINDIR),
+            *globs,
+        ]
+    )
     main(cli_args)
-    with open(pyproject_files_path, "r") as file:
-        tested = file.readlines()
-        expected = [path + "\n" for path in expected]
-        assert tested == expected
+
+    if not include_executables:
+        expected = remove_executables(expected)
+    tested = pyproject_files_path.read_text()
+    assert tested == "\n".join(expected) + "\n"
 
 
 def test_not_find_RECORD(tmp_path):
-    """test if program raises error on not finding RECORD file"""
-
-    mock_root = create_root(tmp_path, "/usr/lib/RECORD", TEST_RECORDS["tldr"][1])
-
-    buildir = tmp_path / "builddir"
-    buildir.mkdir()
-    pyproject_files_path = buildir / "files"
-    cli_args = argparser().parse_args([str(pyproject_files_path),
-                                  mock_root,
-                                  "/usr/lib/python3.7/site-packages",
-                                  "/usr/lib64/python3.7/site-packages", "/usr/bin", "tldr*"])
+    mock_root = create_root(tmp_path, PurePath("/usr/lib/RECORD"), "test_RECORD_tldr")
+    pyproject_files_path = tmp_path / "files"
+    cli_args = argparser().parse_args(
+        [
+            str(pyproject_files_path),
+            str(mock_root),
+            str(SITELIB),
+            str(SITEARCH),
+            str(BINDIR),
+            "tldr*",
+        ]
+    )
 
     with pytest.raises(FileNotFoundError):
         main(cli_args)
 
 
 def test_find_too_many_RECORDS(tmp_path):
-    """test if program raises error on finding multiple RECORD files"""
-
-    mock_root = create_root(tmp_path, *TEST_RECORDS["tldr"])
-    create_root(tmp_path, *TEST_RECORDS["tensorflow"])
-
-    buildir = tmp_path / "builddir"
-    buildir.mkdir()
-    pyproject_files_path = buildir / "files"
-    cli_args = argparser().parse_args([str(pyproject_files_path),
-                                  mock_root,
-                                  "/usr/lib/python3.7/site-packages",
-                                  "/usr/lib64/python3.7/site-packages", "/usr/bin", "tldr*"])
+    mock_root = create_root(tmp_path, TEST_RECORDS["tldr"], "test_RECORD_tldr")
+    create_root(tmp_path, TEST_RECORDS["tensorflow"], "test_RECORD_tensorflow")
+    pyproject_files_path = tmp_path / "files"
+    cli_args = argparser().parse_args(
+        [
+            str(pyproject_files_path),
+            str(mock_root),
+            str(SITELIB),
+            str(SITEARCH),
+            str(BINDIR),
+            "tldr*",
+        ]
+    )
 
     with pytest.raises(FileExistsError):
         main(cli_args)
-
