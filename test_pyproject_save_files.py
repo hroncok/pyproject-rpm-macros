@@ -111,7 +111,7 @@ def test_find_package():
     record_path = python3_sitedir / dist_info_dir / "RECORD"
     parsed_record_content = parse_record(record_path, record_content)
 
-    tested = find_package(python3_sitedir, python3_sitearch, parsed_record_content)
+    tested = find_package([python3_sitedir, python3_sitearch], parsed_record_content)
     expected = ({"/usr/lib/python3.7/site-packages/requests/"},
                 ["/usr/lib/python3.7/site-packages/requests/__init__.py",
                  "/usr/lib/python3.7/site-packages/requests/__pycache__/__init__.cpython-37.pyc",

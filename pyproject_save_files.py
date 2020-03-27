@@ -131,11 +131,11 @@ def find_script(python3_sitedir, parsed_record_content):
     return scripts, scripts + pycache
 
 
-def find_package(sitelib, sitearch, parsed_record_content):
+def find_package(sitedirs, parsed_record_content):
     """return tuple([package dirs], [all package files])"""
 
     packages = set()
-    for sitedir in (sitelib, sitearch):
+    for sitedir in sitedirs:
 
         sitedir_len = len(sitedir.parts)
         for path in parsed_record_content:
@@ -217,11 +217,11 @@ def get_modules_directory(record_path, sitelib, sitearch):
     return PurePath(modules_dir)
 
 
-def classify_paths(record_path, parsed_record_content, sitelib, sitearch, bindir):
+def classify_paths(record_path, parsed_record_content, sitelib, sitearch, sitedirs, bindir):
     """return dict with logical representation of files"""
 
     python3_sitedir = get_modules_directory(record_path, sitelib, sitearch)
-    packages, package_files = find_package(sitelib, sitearch, parsed_record_content)
+    packages, package_files = find_package(sitedirs, parsed_record_content)
     for file in package_files:
         file = PurePath(file)
         parsed_record_content.remove(file)
@@ -323,8 +323,8 @@ def pyproject_save_files(buildroot, sitelib, sitearch,
     sitedirs = _sitedires(sitelib, sitearch)
     record_path = locate_record(buildroot, sitedirs)
     parsed_record = parse_record(record_path, read_record(buildroot, record_path))
-    paths_dict = classify_paths(record_path, parsed_record, sitelib,
-                                sitearch, bindir)
+    paths_dict = classify_paths(record_path, parsed_record,
+                                sitelib, sitearch, sitedirs, bindir)
     files = generate_file_list(record_path, sitelib, sitearch,
                                paths_dict, *parse_globs(globs_to_save))
 
