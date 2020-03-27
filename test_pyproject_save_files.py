@@ -150,8 +150,7 @@ def test_generate_file_list(package, glob, expected):
     paths_dict = PARAMETRIZED_EXPECTED_OUTPUT[package]
     modules_glob = (glob,)
     record_path = TEST_RECORDS[package][0]
-    tested = generate_file_list(PurePath(record_path), PurePath("/usr/lib/python3.7/site-packages"),
-                                PurePath("/usr/lib64/python3.7/site-packages"), paths_dict, modules_glob, False)
+    tested = generate_file_list(paths_dict, modules_glob, False)
 
     assert tested == expected
 
@@ -164,8 +163,7 @@ def test_generate_file_list_with_executables(package, glob, expected):
     modules_glob = (glob,)
     files = sorted(expected + executables)
     record_path = PurePath(TEST_RECORDS[package][0])
-    tested = generate_file_list(record_path, SITELIB,
-                                SITEARCH, paths_dict, modules_glob,
+    tested = generate_file_list(paths_dict, modules_glob,
                                 include_executables=True)
     assert tested == files
 

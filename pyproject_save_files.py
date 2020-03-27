@@ -45,8 +45,8 @@ def _sitedires(sitelib, sitearch):
 def locate_record(root, sitedirs):
     """
     Find a RECORD path in the given root.
-    sitelib/sitearch is relative to root (looking like absolute)
-    Only RECORDs in dist-info dirs inside sitelib/sitearch are considered.
+    sitedirs are relative to root (looking like absolute)
+    Only RECORDs in dist-info dirs inside sitedirs are considered.
     There can only be one RECORD file.
 
     Returns real absolute path to the RECORD file.
@@ -113,7 +113,7 @@ def pycached(script):
     return [script, pyc]
 
 
-def classify_paths(record_path, parsed_record_content, sitelib, sitearch, sitedirs, bindir):
+def classify_paths(record_path, parsed_record_content, sitedirs, bindir):
     """
     For each file in parsed_record_content classify it to a dict structure
     that allows to filter the files for the %files section easier.
@@ -205,9 +205,7 @@ def classify_paths(record_path, parsed_record_content, sitelib, sitearch, sitedi
     return paths
 
 
-def generate_file_list(record_path, sitelib, sitearch,
-                       paths_dict, module_globs,
-                       include_executables = False):
+def generate_file_list(paths_dict, module_globs, include_executables=False):
     """generated list of files to be added to specfile %file"""
     files = set()
 
@@ -263,10 +261,8 @@ def pyproject_save_files(buildroot, sitelib, sitearch,
     record_path = real2buildroot(buildroot, record_path_real)
     parsed_record = parse_record(record_path, read_record(record_path_real))
 
-    paths_dict = classify_paths(record_path, parsed_record,
-                                sitelib, sitearch, sitedirs, bindir)
-    return generate_file_list(record_path, sitelib, sitearch,
-                              paths_dict, *parse_globs(globs_to_save))
+    paths_dict = classify_paths(record_path, parsed_record, sitedirs, bindir)
+    return generate_file_list(paths_dict, *parse_globs(globs_to_save))
 
 
 def main(cli_args):
@@ -282,7 +278,7 @@ def main(cli_args):
 
 def argparser():
     p = argparse.ArgumentParser()
-    p.add_argument("path_to_save", help="Path to save list of paths for file secton", type=Path)
+    p.add_argument("path_to_save", help="Path to save list of paths for file section", type=Path)
     p.add_argument('buildroot', type=Path)
     p.add_argument('sitelib', type=PurePath)
     p.add_argument('sitearch', type=PurePath)
