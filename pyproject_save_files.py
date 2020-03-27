@@ -194,7 +194,13 @@ def classify_paths(record_path, parsed_record_content, sitedirs, bindir):
 
 
 def generate_file_list(paths_dict, module_globs, include_executables=False):
-    """generated list of files to be added to specfile %file"""
+    """
+    This function takes the classified paths_dict and turns it into lines
+    for the %files section. Returns list with text lines, no Paths.
+
+    Only includes files from modules that match module_globs, metadata and
+    optional executables.
+    """
     files = set()
 
     if include_executables:
@@ -223,7 +229,7 @@ def parse_globs(nargs):
     """
     Parse nargs from the %pyproject_save_files macro
 
-    Argument +bindir is treted as a flag, everything is a glob
+    Argument +bindir is treated as a flag, everything is a glob
 
     Returns globs, boolean flag whether to include executables from bindir
     """
