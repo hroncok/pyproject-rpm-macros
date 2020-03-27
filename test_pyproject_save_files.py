@@ -17,6 +17,23 @@ SITELIB = PurePath("/usr/lib/python3.7/site-packages")
 SITEARCH = PurePath("/usr/lib64/python3.7/site-packages")
 
 
+@pytest.fixture(autouse=True)
+def _fake_version(monkeypatch):
+    """
+    The test data are for Python 3.7.
+    We only support running this for 3.7 packages on 3.7 etc.
+    Hence in tests, we fake our version.
+    """
+    class version_info(tuple):
+        major = 3
+        minor = 7
+        patch = 100
+        def __new__(cls):
+            return super().__new__(cls, (3, 7, 100))
+
+    monkeypatch.setattr(sys, "version_info", version_info(), raising=True)
+
+
 def test_parse_record_kerberos():
     """test if RECORD file is parsed properly"""
     record_content = read_record(RECORDS_PATH / "test_RECORD_kerberos")
@@ -165,7 +182,7 @@ TEST_RECORDS = {
 test_data = []
 import json
 with open(f"{RECORDS_PATH}/pyproject_save_files_test_data.json", "r", encoding='utf-8') as file:
-    PARAMETRIZED_EXPECTED_OUTPUT = json.loads(file.read(), encoding='utf-8')
+    PARAMETRIZED_EXPECTED_OUTPUT = json.loads(file.read())
 
 
 for package in TEST_RECORDS:
@@ -177,6 +194,7 @@ file_section = (
     ("tensorflow", "tensorflow*", sorted([
         '/usr/lib/python3.7/site-packages/tensorflow_core/',
         "/usr/lib64/python3.7/site-packages/tensorflow/", "/usr/lib64/python3.7/site-packages/tensorflow_core/",
+        "%dir /usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info",
         "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/INSTALLER",
         "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/METADATA",
         "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/RECORD",
@@ -185,6 +203,7 @@ file_section = (
         "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/top_level.txt",
     ])),
     ("kerberos", "ke?ber*", sorted(["/usr/lib64/python3.7/site-packages/kerberos.cpython-37m-x86_64-linux-gnu.so",
+                             "%dir /usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info",
                              "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/INSTALLER",
                              "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/METADATA",
                              "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/RECORD",
@@ -192,6 +211,7 @@ file_section = (
                              "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/top_level.txt",
                              ])),
     ("requests", "requests", sorted(["/usr/lib/python3.7/site-packages/requests/",
+                              "%dir /usr/lib/python3.7/site-packages/requests-2.22.0.dist-info",
                               "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/INSTALLER",
                               "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/LICENSE",
                               "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/METADATA",
@@ -199,8 +219,9 @@ file_section = (
                               "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/WHEEL",
                               "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/top_level.txt",
                               ])),
-    ("tldr", "tldr", sorted(["/usr/lib/python3.7/site-packages/__pycache__/tldr.cpython-3" + str(sys.version_info[1]) + "{,.opt-?}.pyc",
+    ("tldr", "tldr", sorted(["/usr/lib/python3.7/site-packages/__pycache__/tldr.cpython-37{,.opt-?}.pyc",
                               "/usr/lib/python3.7/site-packages/tldr.py",
+                              "%dir /usr/lib/python3.7/site-packages/tldr-0.5.dist-info",
                               "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/INSTALLER",
                               "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/LICENSE",
                               "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/METADATA",
@@ -210,7 +231,8 @@ file_section = (
                               ])),
 
     ("mistune", "mistune", sorted([
-        "/usr/lib64/python3.7/site-packages/__pycache__/mistune.cpython-3" + str(sys.version_info[1]) + "{,.opt-?}.pyc",
+        "/usr/lib64/python3.7/site-packages/__pycache__/mistune.cpython-37{,.opt-?}.pyc",
+        "%dir /usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info",
         "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/INSTALLER",
         "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/LICENSE",
         "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/METADATA",
@@ -218,7 +240,7 @@ file_section = (
         "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/WHEEL",
         "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/top_level.txt",
         "/usr/lib64/python3.7/site-packages/mistune.py",
-        "/usr/lib64/python3.7/site-packages/mistune.cpython-38-x86_64-linux-gnu.so"
+        "/usr/lib64/python3.7/site-packages/mistune.cpython-37m-x86_64-linux-gnu.so"
     ]))
 )
 

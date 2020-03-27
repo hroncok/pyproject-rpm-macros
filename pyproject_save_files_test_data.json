@@ -5,7 +5,7 @@
     },
     "metadata": {
       "dirs": [
-        "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/"
+        "/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info"
       ],
       "docs": [],
       "files": [
@@ -23,7 +23,7 @@
         {
           "type": "package",
           "files": [
-            "/usr/lib/python3.7/site-packages/requests/"
+            "/usr/lib/python3.7/site-packages/requests"
           ]
         }
       ]
@@ -38,7 +38,7 @@
     },
     "metadata": {
       "dirs": [
-        "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/"
+        "/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info"
       ],
       "docs": [],
       "files": [
@@ -73,7 +73,7 @@
     },
     "metadata": {
       "dirs": [
-        "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/"
+        "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info"
       ],
       "docs": [],
       "files": [
@@ -90,8 +90,9 @@
       "tldr": [
         {
           "type": "script",
-          "pycache": [
-            "/usr/lib/python3.7/site-packages/tldr.py"
+          "files": [
+            "/usr/lib/python3.7/site-packages/tldr.py",
+            "/usr/lib/python3.7/site-packages/__pycache__/tldr.cpython-37{,.opt-?}.pyc"
           ]
         }
       ]
@@ -103,7 +104,7 @@
   "tensorflow": {
     "metadata": {
       "dirs": [
-        "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info/"
+        "/usr/lib64/python3.7/site-packages/tensorflow-2.1.0.dist-info"
       ],
       "docs": [],
       "files": [
@@ -120,7 +121,7 @@
       "tensorflow": [
         {
           "files": [
-            "/usr/lib64/python3.7/site-packages/tensorflow/"
+            "/usr/lib64/python3.7/site-packages/tensorflow"
           ],
           "type": "package"
         }
@@ -128,13 +129,13 @@
       "tensorflow_core": [
         {
           "files": [
-            "/usr/lib64/python3.7/site-packages/tensorflow_core/"
+            "/usr/lib64/python3.7/site-packages/tensorflow_core"
           ],
           "type": "package"
         },
         {
           "files": [
-            "/usr/lib/python3.7/site-packages/tensorflow_core/"
+            "/usr/lib/python3.7/site-packages/tensorflow_core"
           ],
           "type": "package"
         }
@@ -161,7 +162,7 @@
     },
     "metadata": {
       "dirs": [
-        "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/"
+        "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info"
       ],
       "docs": [],
       "files": [
@@ -178,14 +179,15 @@
       "mistune": [
         {
           "type": "script",
-          "pycache": [
-            "/usr/lib64/python3.7/site-packages/mistune.py"
+          "files": [
+            "/usr/lib64/python3.7/site-packages/mistune.py",
+            "/usr/lib64/python3.7/site-packages/__pycache__/mistune.cpython-37{,.opt-?}.pyc"
           ]
         },
         {
           "type": "extension",
           "files": [
-            "/usr/lib64/python3.7/site-packages/mistune.cpython-38-x86_64-linux-gnu.so"
+            "/usr/lib64/python3.7/site-packages/mistune.cpython-37m-x86_64-linux-gnu.so"
           ]
         }
       ]

@@ -3,11 +3,11 @@ import csv
 import fnmatch
 import os
 import re
-from pathlib import Path
-from pathlib import PurePath
-from pprint import pformat
-from warnings import warn
+import warnings
 import sys
+
+from collections import defaultdict
+from pathlib import Path, PurePath
 
 
 def delete_commonpath(longer_path, prefix):
@@ -242,83 +242,136 @@ def get_modules_directory(record_path, sitelib, sitearch):
     return PurePath(modules_dir)
 
 
+def pycached(script):
+    """
+    For a script path, return a list with that path and its bytecode glob.
+    Like the %pycached macro.
+    """
+    assert script.suffix == '.py'
+    ver = sys.version_info
+    pycname = f"{script.stem}.cpython-{ver.major}{ver.minor}{{,.opt-?}}.pyc"
+    pyc = script.parent / "__pycache__" / pycname
+    return [script, pyc]
+
+
 def classify_paths(record_path, parsed_record_content, sitelib, sitearch, sitedirs, bindir):
-    """return dict with logical representation of files"""
+    """
+    For each file in parsed_record_content classify it to a dict structure
+    that allows to filter the files for the %files section easier.
 
-    python3_sitedir = get_modules_directory(record_path, sitelib, sitearch)
-    packages, package_files = find_package(sitedirs, parsed_record_content)
-    for file in package_files:
-        file = PurePath(file)
-        parsed_record_content.remove(file)
-    metadata_dir, metadata_files = find_metadata(parsed_record_content, python3_sitedir, record_path)
-    for file in metadata_files:
-        file = PurePath(file)
-        parsed_record_content.remove(file)
-    extension_files = find_extension(python3_sitedir, parsed_record_content)
-    for file in extension_files:
-        file = PurePath(file)
-        parsed_record_content.remove(file)
-    scripts, pycached = find_script(python3_sitedir, parsed_record_content)
-    for file in pycached:
-        file = PurePath(file)
-        parsed_record_content.remove(file)
-    executables, bindir_content = find_executable(bindir, parsed_record_content)
-    for file in bindir_content:
-        file = PurePath(file)
-        parsed_record_content.remove(file)
+    For the dict structure, look at the beginning of the code.
 
-    modules = get_modules(packages, extension_files, scripts)
-
-    parsed_record_content = sorted([str(file) for file in parsed_record_content])
-    if parsed_record_content:
-        warn(f"Uncathegorized files: \n{pformat(parsed_record_content)}")
-
+    Each "module" is a dict with "type" ("package", "script", "extension") and "files".
+    """
+    distinfo = record_path.parent
     paths = {
-            "metadata": {
-                "files": metadata_files,   # ends in slash = directory & contents
-                "dirs": [metadata_dir],
-                "docs": [],  # now always missing
-                "licenses": [],  # now always missing
-            },
-            "modules": modules,
-            "executables": {
-                "files": executables
-            },
-            "other": {
-                "files": parsed_record_content
-            }
+        "metadata": {
+            "files": [],  # regular %file entries with dist-info content
+            "dirs": [distinfo],  # %dir %file entries with dist-info directory
+            "docs": [],  # to be used once there is upstream way to recognize READMEs
+            "licenses": [],  # to be used once there is upstream way to recognize LICENSEs
+        },
+        "modules": defaultdict(list),  # each importable module (directory, .py, .so)
+        "executables": {
+            "files": [], # regular %file entries in %{_bindir}
+        },
+        "other": {
+            "files": [], # regular %file entries we could not parse :(
         }
+    }
+
+    # Note that there are no directories, only files !  # TODO find documentation
+    for path in parsed_record_content:
+        if path.suffix == ".pyc":
+            # we handle bytecode separately
+            continue
+
+        if path.parent == distinfo:
+            # TODO is this a license/documentation?
+            paths["metadata"]["files"].append(path)
+            continue
+
+        if path.parent == bindir:
+            paths["executables"]["files"].append(path)
+            continue
+
+        for sitedir in sitedirs:
+            if sitedir in path.parents:
+                if path.parent == sitedir:
+                    if path.suffix == '.so':
+                        # extension modules can have 2 suffixes
+                        name = PurePath(path.stem).stem
+                        # as far as we know, there can be only one
+                        paths["modules"][name].append({
+                            "type": "extension",
+                            "files": [path],
+                        })
+                    elif path.suffix == '.py':
+                        name = path.stem
+                        # theoretically, we can have 1 in lib and 1 in lib64
+                        for module in paths["modules"][name]:
+                            if module["type"] == "script":
+                                if path not in module["files"]:
+                                    module["files"].extend(pycached(path))
+                                break
+                        else:
+                            paths["modules"][name].append({
+                                "type": "script",
+                                "files": pycached(path),
+                            })
+                    else:
+                        # TODO classify .pth files
+                        warnings.warn(f"Unrecognized file: {path}")
+                        paths["other"]["files"].append(path)
+                else:
+                    # this file is inside a dir, we classify that dir
+                    index = path.parents.index(sitedir)
+                    module_dir = path.parents[index-1]
+                    name = module_dir.name
+                    for module in paths["modules"][name]:
+                        if module["type"] == "package":
+                            if module_dir not in module["files"]:
+                                module["files"].append(module_dir)
+                            break
+                    else:
+                        paths["modules"][name].append({
+                            "type": "package",
+                            "files": [module_dir],
+                        })
+                break
+        else:
+            warnings.warn(f"Unrecognized file: {path}")
+            paths["other"]["files"].append(path)
 
     return paths
 
 
 def generate_file_list(record_path, sitelib, sitearch,
-                       paths_dict, modules_glob,
+                       paths_dict, module_globs,
                        include_executables = False):
     """generated list of files to be added to specfile %file"""
-    paths = set(paths_dict["executables"]["files"]) if include_executables else set()
+    files = set()
+
+    if include_executables:
+        files.update(f"{p}" for p in paths_dict["executables"]["files"])
+
+    files.update(f"{p}" for p in paths_dict["metadata"]["files"])
+    for macro in "dir", "doc", "license":
+        files.update(f"%{macro} {p}" for p in paths_dict["metadata"][f"{macro}s"])
+
     modules = paths_dict["modules"]
-    for glob in modules_glob:
-        for names in modules:
-            if fnmatch.fnmatch(re.escape(names), glob):
-                for module in modules[names]:
-                    if module["type"] == "script":
-                        script_and_pycache = []
-                        for file in module["pycache"]:
-                            # adding pycached files
-                            script_and_pycache.append(file)
-                            pyminor = str(sys.version_info[1])
-                            dirname = str(get_modules_directory(record_path, sitelib, sitearch))
-                            modulename = PurePath(delete_commonpath(file, dirname)).stem
-                            script_and_pycache.append(dirname + "/__pycache__/" + modulename + ".cpython-3" + pyminor +
-                                                      "{,.opt-?}.pyc")
-                        paths.update(set(script_and_pycache))
+
+    for name in modules:
+        for glob in module_globs:
+            if fnmatch.fnmatch(name, glob):
+                for module in modules[name]:
+                    if module["type"] == "package":
+                        files.update(f"{p}/" for p in module["files"])
                     else:
-                        paths.update(set((module["files"])))
+                        files.update(f"{p}" for p in module["files"])
+                break
 
-    paths.update(set(paths_dict['metadata']['files']))
-
-    return sorted(paths)
+    return sorted(files)
 
 
 def parse_globs(nargs):
@@ -353,10 +406,8 @@ def pyproject_save_files(buildroot, sitelib, sitearch,
 
     paths_dict = classify_paths(record_path, parsed_record,
                                 sitelib, sitearch, sitedirs, bindir)
-    files = generate_file_list(record_path, sitelib, sitearch,
-                               paths_dict, *parse_globs(globs_to_save))
-
-    return files
+    return generate_file_list(record_path, sitelib, sitearch,
+                              paths_dict, *parse_globs(globs_to_save))
 
 
 def main(cli_args):
