@@ -30,7 +30,7 @@ def buildroot2real(root, buildrootpath):
         >>> buildroot2real(Path('/tmp/buildroot'), PurePath('/foo'))
         PosixPath('/tmp/buildroot/foo')
     """
-    return root / buildrootpath.relative_to('/')
+    return root / buildrootpath.relative_to("/")
 
 
 def _sitedires(sitelib, sitearch):
@@ -54,7 +54,7 @@ def locate_record(root, sitedirs):
 
     records = []
     for sitedir in sitedirs:
-        records.extend(buildroot2real(root, sitedir).glob('*.dist-info/RECORD'))
+        records.extend(buildroot2real(root, sitedir).glob("*.dist-info/RECORD"))
 
     sitedirs_text = ", ".join(str(p) for p in sitedirs)
     if len(records) == 0:
@@ -75,8 +75,10 @@ def read_record(record_path):
     We will later care only for the paths anyway.
     """
 
-    with open(record_path, newline='', encoding='utf-8') as f:
-        yield from csv.reader(f, delimiter=',', quotechar='"', lineterminator=os.linesep)
+    with open(record_path, newline="", encoding="utf-8") as f:
+        yield from csv.reader(
+            f, delimiter=",", quotechar='"', lineterminator=os.linesep
+        )
 
 
 def parse_record(record_path, record_content):
@@ -100,13 +102,12 @@ def parse_record(record_path, record_content):
     return [PurePath(os.path.normpath(sitedir / row[0])) for row in record_content]
 
 
-
 def pycached(script):
     """
     For a script path, return a list with that path and its bytecode glob.
     Like the %pycached macro.
     """
-    assert script.suffix == '.py'
+    assert script.suffix == ".py"
     ver = sys.version_info
     pycname = f"{script.stem}.cpython-{ver.major}{ver.minor}{{,.opt-?}}.pyc"
     pyc = script.parent / "__pycache__" / pycname
@@ -131,12 +132,8 @@ def classify_paths(record_path, parsed_record_content, sitedirs, bindir):
             "licenses": [],  # to be used once there is upstream way to recognize LICENSEs
         },
         "modules": defaultdict(list),  # each importable module (directory, .py, .so)
-        "executables": {
-            "files": [], # regular %file entries in %{_bindir}
-        },
-        "other": {
-            "files": [], # regular %file entries we could not parse :(
-        }
+        "executables": {"files": []},  # regular %file entries in %{_bindir}
+        "other": {"files": []},  # regular %file entries we could not parse :(
     }
 
     # Note that there are no directories, only files !  # TODO find documentation
@@ -157,15 +154,14 @@ def classify_paths(record_path, parsed_record_content, sitedirs, bindir):
         for sitedir in sitedirs:
             if sitedir in path.parents:
                 if path.parent == sitedir:
-                    if path.suffix == '.so':
+                    if path.suffix == ".so":
                         # extension modules can have 2 suffixes
                         name = PurePath(path.stem).stem
                         # as far as we know, there can be only one
-                        paths["modules"][name].append({
-                            "type": "extension",
-                            "files": [path],
-                        })
-                    elif path.suffix == '.py':
+                        paths["modules"][name].append(
+                            {"type": "extension", "files": [path]}
+                        )
+                    elif path.suffix == ".py":
                         name = path.stem
                         # theoretically, we can have 1 in lib and 1 in lib64
                         for module in paths["modules"][name]:
@@ -174,10 +170,9 @@ def classify_paths(record_path, parsed_record_content, sitedirs, bindir):
                                     module["files"].extend(pycached(path))
                                 break
                         else:
-                            paths["modules"][name].append({
-                                "type": "script",
-                                "files": pycached(path),
-                            })
+                            paths["modules"][name].append(
+                                {"type": "script", "files": pycached(path)}
+                            )
                     else:
                         # TODO classify .pth files
                         warnings.warn(f"Unrecognized file: {path}")
@@ -185,7 +180,7 @@ def classify_paths(record_path, parsed_record_content, sitedirs, bindir):
                 else:
                     # this file is inside a dir, we classify that dir
                     index = path.parents.index(sitedir)
-                    module_dir = path.parents[index-1]
+                    module_dir = path.parents[index - 1]
                     name = module_dir.name
                     for module in paths["modules"][name]:
                         if module["type"] == "package":
@@ -193,10 +188,9 @@ def classify_paths(record_path, parsed_record_content, sitedirs, bindir):
                                 module["files"].append(module_dir)
                             break
                     else:
-                        paths["modules"][name].append({
-                            "type": "package",
-                            "files": [module_dir],
-                        })
+                        paths["modules"][name].append(
+                            {"type": "package", "files": [module_dir]}
+                        )
                 break
         else:
             warnings.warn(f"Unrecognized file: {path}")
@@ -248,8 +242,7 @@ def parse_globs(nargs):
     return nargs, include_bindir
 
 
-def pyproject_save_files(buildroot, sitelib, sitearch,
-                         bindir, globs_to_save):
+def pyproject_save_files(buildroot, sitelib, sitearch, bindir, globs_to_save):
     """
     Takes arguments from the %{pyproject_save_files} macro
 
@@ -266,27 +259,30 @@ def pyproject_save_files(buildroot, sitelib, sitearch,
 
 
 def main(cli_args):
-    file_section = pyproject_save_files(cli_args.buildroot,
-                                        cli_args.sitelib,
-                                        cli_args.sitearch,
-                                        cli_args.bindir,
-                                        cli_args.globs_to_save)
+    file_section = pyproject_save_files(
+        cli_args.buildroot,
+        cli_args.sitelib,
+        cli_args.sitearch,
+        cli_args.bindir,
+        cli_args.globs_to_save,
+    )
 
-    cli_args.path_to_save.write_text("\n".join(file_section) + "\n",
-                                     encoding='utf-8')
+    cli_args.path_to_save.write_text("\n".join(file_section) + "\n", encoding="utf-8")
 
 
 def argparser():
     p = argparse.ArgumentParser()
-    p.add_argument("path_to_save", help="Path to save list of paths for file section", type=Path)
-    p.add_argument('buildroot', type=Path)
-    p.add_argument('sitelib', type=PurePath)
-    p.add_argument('sitearch', type=PurePath)
-    p.add_argument('bindir', type=PurePath)
+    p.add_argument(
+        "path_to_save", help="Path to save list of paths for file section", type=Path
+    )
+    p.add_argument("buildroot", type=Path)
+    p.add_argument("sitelib", type=PurePath)
+    p.add_argument("sitearch", type=PurePath)
+    p.add_argument("bindir", type=PurePath)
     p.add_argument("globs_to_save", nargs="+")
     return p
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli_args = argparser().parse_args()
     main(cli_args)
