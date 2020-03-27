@@ -8,16 +8,15 @@ from pathlib import PurePath
 from pprint import pformat
 from warnings import warn
 import sys
-from typing import List, Dict, Union, Tuple, Set, Any, Optional
 
 
-def delete_commonpath(longer_path: Union[str, PurePath, Path], prefix: Union[str, PurePath, Path]) -> str:
+def delete_commonpath(longer_path, prefix):
     """return string with deleted common path."""
 
     return PurePath('/') / PurePath(longer_path).relative_to(prefix)
 
 
-def locate_record(root: Path, python3_sitelib: PurePath, python3_sitearch: PurePath) -> Path:
+def locate_record(root, python3_sitelib, python3_sitearch):
     """return path to record stripped of root path."""
 
     records = list((Path(root) / Path(python3_sitelib).relative_to('/')).glob('*.dist-info/RECORD'))
@@ -32,7 +31,7 @@ def locate_record(root: Path, python3_sitelib: PurePath, python3_sitearch: PureP
     return Path("/") / Path(delete_commonpath(record_path, root))
 
 
-def read_record(root: Union[Path, str], record_path: Union[Path, str]):
+def read_record(root, record_path):
     """returns parsed list of triplets like: [(path, hash, size), ...]"""
 
     root = Path(root)
@@ -48,7 +47,7 @@ def read_record(root: Union[Path, str], record_path: Union[Path, str]):
         yield from content
 
 
-def parse_record(record_path: Union[Path, str], record_content: List[Tuple[str, str, str]]) -> List[PurePath]:
+def parse_record(record_path, record_content):
     """return list of paths stripped of root
 
     params:
@@ -67,7 +66,7 @@ def parse_record(record_path: Union[Path, str], record_content: List[Tuple[str, 
 
 
 
-def is_subpath(parent: PurePath, child: PurePath):
+def is_subpath(parent, child):
     """
     Check whether the given child is a subpath of parent.
     Expects both arguments to be absolute Paths (no checks are done).
@@ -80,7 +79,7 @@ def is_subpath(parent: PurePath, child: PurePath):
         return True
 
 
-def find_metadata(parsed_record_content: List[PurePath], python3_sitedir: PurePath, record_path: PurePath) -> Tuple[str, List[str]]:
+def find_metadata(parsed_record_content, python3_sitedir, record_path):
     """go through parsed RECORD content, returns tuple:
     (path to directory containing metadata, [paths to all metadata files]).
 
@@ -95,14 +94,14 @@ def find_metadata(parsed_record_content: List[PurePath], python3_sitedir: PurePa
     return f"{metadata_dir}/", [str(path) for path in parsed_record_content if is_subpath(metadata_dir, path)]
 
 
-def find_extension(python3_sitedir: PurePath, parsed_record_content: List[PurePath]) -> List[str]:
+def find_extension(python3_sitedir, parsed_record_content):
     """list paths to extensions"""
 
     return [str(path) for path in parsed_record_content
             if path.parent == python3_sitedir and path.match('*.so')]
 
 
-def find_script(python3_sitedir: PurePath, parsed_record_content: List[PurePath]) -> Tuple[List[str], List[str]]:
+def find_script(python3_sitedir, parsed_record_content):
     """list paths to scripts and theire pycache files"""
 
     scripts = [str(path) for path in parsed_record_content if path.match(f"{python3_sitedir}/*.py")]
@@ -115,7 +114,7 @@ def find_script(python3_sitedir: PurePath, parsed_record_content: List[PurePath]
     return scripts, scripts + pycache
 
 
-def find_package(python3_sitelib: PurePath, python3_sitearch: PurePath, parsed_record_content: List[PurePath]) -> Tuple[Set[str], List[str]]:
+def find_package(python3_sitelib, python3_sitearch, parsed_record_content):
     """return tuple([package dirs], [all package files])"""
 
     packages = set()
@@ -127,14 +126,14 @@ def find_package(python3_sitelib: PurePath, python3_sitearch: PurePath, parsed_r
                 package = PurePath(*path.parts[:(sitedir_len + 1)])
                 if not ".dist-info" in package.name and not "__pycache__" == package.name:
                     packages.add(f"{package}/")
-    files: List[str] = []
+    files = []
     for package in packages:
         files += [str(path) for path in parsed_record_content if is_subpath(package, path)]
 
     return packages, files
 
 
-def find_executable(bindir: PurePath, parsed_record_content: List[PurePath]) -> Tuple[List[str], List[str]]:
+def find_executable(bindir, parsed_record_content):
     """return all files in bindir"""
 
     executables = []
@@ -146,11 +145,11 @@ def find_executable(bindir: PurePath, parsed_record_content: List[PurePath]) -> 
     return executables, bindir_content
 
 
-def get_modules(packages: Tuple[List[set], List[str]], extension_files: Tuple[List[str], List[str]],
-                scripts: Tuple[List[str], List[str]]) -> Dict[str, Any]:
+def get_modules(packages, extension_files,
+                scripts):
     """helper function"""
 
-    modules: Dict[str, Any] = {}
+    modules = {}
 
     for package in packages:
         key = Path(package).parts[-1]
@@ -184,7 +183,7 @@ def get_modules(packages: Tuple[List[set], List[str]], extension_files: Tuple[Li
     return modules
 
 
-def get_modules_directory(record_path: PurePath, python3_sitelib: PurePath, python3_sitearch: PurePath):
+def get_modules_directory(record_path, python3_sitelib, python3_sitearch):
     """find out directory where modules should be located"""
     record_path = os.path.normpath(record_path)
     python3_sitearch = os.path.normpath(python3_sitearch)
@@ -201,7 +200,7 @@ def get_modules_directory(record_path: PurePath, python3_sitelib: PurePath, pyth
     return PurePath(modules_dir)
 
 
-def classify_paths(record_path: PurePath, parsed_record_content: List[PurePath], python3_sitelib: PurePath, python3_sitearch: PurePath, bindir: PurePath) -> Dict:
+def classify_paths(record_path, parsed_record_content, python3_sitelib, python3_sitearch, bindir):
     """return dict with logical representation of files"""
 
     python3_sitedir = get_modules_directory(record_path, python3_sitelib, python3_sitearch)
@@ -251,9 +250,9 @@ def classify_paths(record_path: PurePath, parsed_record_content: List[PurePath],
     return paths
 
 
-def generate_file_list(record_path: PurePath, python3_sitelib: PurePath, python3_sitearch: PurePath,
-                       paths_dict: Dict[str, Any], modules_glob: List[str],
-                       include_executables: bool = False) -> List[str]:
+def generate_file_list(record_path, python3_sitelib, python3_sitearch,
+                       paths_dict, modules_glob,
+                       include_executables = False):
     """generated list of files to be added to specfile %file"""
     paths = set(paths_dict["executables"]["files"]) if include_executables else set()
     modules = paths_dict["modules"]
