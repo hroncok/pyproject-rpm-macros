@@ -114,6 +114,21 @@ def pycached(script):
     return [script, pyc]
 
 
+def add_file_to_module(paths, module_name, module_type, *files):
+    """
+    Helper procedure, adds given files to the module_name of a given module_type
+    """
+    for module in paths["modules"][module_name]:
+        if module["type"] == module_type:
+            if files[0] not in module["files"]:
+                module["files"].extend(files)
+            break
+    else:
+        paths["modules"][module_name].append(
+            {"type": module_type, "files": list(files)}
+        )
+
+
 def classify_paths(record_path, parsed_record_content, sitedirs, bindir):
     """
     For each file in parsed_record_content classify it to a dict structure
@@ -157,22 +172,10 @@ def classify_paths(record_path, parsed_record_content, sitedirs, bindir):
                     if path.suffix == ".so":
                         # extension modules can have 2 suffixes
                         name = PurePath(path.stem).stem
-                        # as far as we know, there can be only one
-                        paths["modules"][name].append(
-                            {"type": "extension", "files": [path]}
-                        )
+                        add_file_to_module(paths, name, "extension", path)
                     elif path.suffix == ".py":
                         name = path.stem
-                        # theoretically, we can have 1 in lib and 1 in lib64
-                        for module in paths["modules"][name]:
-                            if module["type"] == "script":
-                                if path not in module["files"]:
-                                    module["files"].extend(pycached(path))
-                                break
-                        else:
-                            paths["modules"][name].append(
-                                {"type": "script", "files": pycached(path)}
-                            )
+                        add_file_to_module(paths, name, "script", *pycached(path))
                     else:
                         # TODO classify .pth files
                         warnings.warn(f"Unrecognized file: {path}")
@@ -181,16 +184,7 @@ def classify_paths(record_path, parsed_record_content, sitedirs, bindir):
                     # this file is inside a dir, we classify that dir
                     index = path.parents.index(sitedir)
                     module_dir = path.parents[index - 1]
-                    name = module_dir.name
-                    for module in paths["modules"][name]:
-                        if module["type"] == "package":
-                            if module_dir not in module["files"]:
-                                module["files"].append(module_dir)
-                            break
-                    else:
-                        paths["modules"][name].append(
-                            {"type": "package", "files": [module_dir]}
-                        )
+                    add_file_to_module(paths, module_dir.name, "package", module_dir)
                 break
         else:
             warnings.warn(f"Unrecognized file: {path}")
