@@ -212,7 +212,7 @@ def generate_file_list(paths_dict, module_globs, include_executables=False):
 
     for name in modules:
         for glob in module_globs:
-            if fnmatch.fnmatch(name, glob):
+            if fnmatch.fnmatchcase(name, glob):
                 for module in modules[name]:
                     if module["type"] == "package":
                         files.update(f"{p}/" for p in module["files"])
