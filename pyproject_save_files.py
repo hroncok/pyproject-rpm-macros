@@ -2,18 +2,11 @@ import argparse
 import csv
 import fnmatch
 import os
-import re
 import warnings
 import sys
 
 from collections import defaultdict
 from pathlib import Path, PurePath
-
-
-def delete_commonpath(longer_path, prefix):
-    """return string with deleted common path."""
-
-    return PurePath('/') / PurePath(longer_path).relative_to(prefix)
 
 
 def real2buildroot(root, realpath):
@@ -106,140 +99,6 @@ def parse_record(record_path, record_content):
     # PurePaths don't have .resolve(), so we make a trip to str and back :(
     return [PurePath(os.path.normpath(sitedir / row[0])) for row in record_content]
 
-
-
-def is_subpath(parent, child):
-    """
-    Check whether the given child is a subpath of parent.
-    Expects both arguments to be absolute Paths (no checks are done).
-    """
-    try:
-        child.relative_to(parent)
-    except ValueError:
-        return False
-    else:
-        return True
-
-
-def find_metadata(parsed_record_content, python3_sitedir, record_path):
-    """go through parsed RECORD content, returns tuple:
-    (path to directory containing metadata, [paths to all metadata files]).
-
-    find_metadata(["/usr/lib/python3.7/site-packages/requests/__init__.py, ..."],
-                   "/usr/lib/python3.7/site-packages",
-                   "/usr/lib/python3.7/site-packages/requests-2.10.dist-info/RECORD")
-            -> ("/usr/lib/python3.7/site-packages/requests-2.10.dist-info/,
-                ["/usr/lib/python3.7/site-packages/requests-2.10.dist-info/RECORD", ...])
-    """
-    record_path = PurePath(record_path)
-    metadata_dir = record_path.parent
-    return f"{metadata_dir}/", [str(path) for path in parsed_record_content if is_subpath(metadata_dir, path)]
-
-
-def find_extension(python3_sitedir, parsed_record_content):
-    """list paths to extensions"""
-
-    return [str(path) for path in parsed_record_content
-            if path.parent == python3_sitedir and path.match('*.so')]
-
-
-def find_script(python3_sitedir, parsed_record_content):
-    """list paths to scripts and theire pycache files"""
-
-    scripts = [str(path) for path in parsed_record_content if path.match(f"{python3_sitedir}/*.py")]
-    pycache = []
-    for script in scripts:
-
-        filename = delete_commonpath(script, python3_sitedir)  # without suffix
-        filename = PurePath(filename).stem
-        pycache.extend([str(path) for path in parsed_record_content if path.match(f"{python3_sitedir}/__pycache__/{filename}*.pyc")])
-    return scripts, scripts + pycache
-
-
-def find_package(sitedirs, parsed_record_content):
-    """return tuple([package dirs], [all package files])"""
-
-    packages = set()
-    for sitedir in sitedirs:
-
-        sitedir_len = len(sitedir.parts)
-        for path in parsed_record_content:
-            if len(path.parts) > (sitedir_len + 1) and is_subpath(sitedir, path):
-                package = PurePath(*path.parts[:(sitedir_len + 1)])
-                if not ".dist-info" in package.name and not "__pycache__" == package.name:
-                    packages.add(f"{package}/")
-    files = []
-    for package in packages:
-        files += [str(path) for path in parsed_record_content if is_subpath(package, path)]
-
-    return packages, files
-
-
-def find_executable(bindir, parsed_record_content):
-    """return all files in bindir"""
-
-    executables = []
-    bindir_content = [str(path) for path in parsed_record_content if is_subpath(bindir, path)]
-    for file in bindir_content:
-        # do not list .pyc files, because pyproject-rpm-macro deletes them in bindir
-        if not file.endswith(".pyc"):
-            executables.append(file)
-    return executables, bindir_content
-
-
-def get_modules(packages, extension_files,
-                scripts):
-    """helper function"""
-
-    modules = {}
-
-    for package in packages:
-        key = Path(package).parts[-1]
-        if key not in modules:
-            modules[key] = []
-        modules[key].append({
-            "type": "package",
-            "files": [package],
-        })
-
-    for script in scripts:
-        key = Path(script).stem
-        if key not in modules:
-            modules[key] = []
-
-        modules[key].append({
-            "type": "script",
-            "pycache": [script],
-        })
-
-    for extension in extension_files:
-        key = Path(extension).stem
-        key = Path(key).stem  # extensions have two suffixes
-        if key not in modules:
-            modules[key] = []
-        modules[key].append({
-            "type": "extension",
-            "files": [extension]
-        })
-
-    return modules
-
-
-def get_modules_directory(record_path, sitelib, sitearch):
-    """find out directory where modules should be located"""
-    record_path = os.path.normpath(record_path)
-    sitearch = os.path.normpath(sitearch)
-    sitelib = os.path.normpath(sitelib)
-
-    if os.path.commonpath((sitelib, record_path)) == sitelib:
-        modules_dir = sitelib
-    elif os.path.commonpath((sitearch, record_path)) == sitearch:
-        modules_dir = sitearch
-    else:
-        assert False, f"""sitelib: {sitelib} or sitearch: {sitearch} does not
-        contain RECORD file: {record_path}"""
-
-    return PurePath(modules_dir)
 
 
 def pycached(script):
