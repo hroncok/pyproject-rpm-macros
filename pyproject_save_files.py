@@ -280,50 +280,61 @@ def generate_file_list(record_path: PurePath, python3_sitelib: PurePath, python3
     return sorted(paths)
 
 
-def pyproject_save_files_parse(module_globs: List[str]) -> Tuple[List[str], bool]:
-    """parse input from %pyproject_save_files macro"""
+def parse_globs(nargs):
+    """
+    Parse nargs from the %pyproject_save_files macro
+
+    Argument +bindir is treted as a flag, everything is a glob
+
+    Returns globs, boolean flag whether to include executables from bindir
+    """
     include_bindir = False
 
-    if "+bindir" in module_globs:
+    if "+bindir" in nargs:
         include_bindir = True
-        module_globs.remove("+bindir")
+        nargs.remove("+bindir")
 
-    return module_globs, include_bindir
+    return nargs, include_bindir
 
 
-def pyproject_save_files(root: Path, python3_sitelib: PurePath, python3_sitearch: PurePath,
-                         bindir: PurePath, args: List[str]) -> List[str]:
-    """return list of files for specfile
-
-    args: arguments from %{pyproject_save_files} macro
+def pyproject_save_files(buildroot, python3_sitelib, python3_sitearch,
+                         bindir, globs_to_save):
     """
-    record_path = locate_record(root, python3_sitelib, python3_sitearch)
-    parsed_record = parse_record(record_path, (read_record(root, record_path)))
-    paths_dict = classify_paths(record_path, parsed_record, python3_sitelib, python3_sitearch, bindir)
+    Takes arguments from the %{pyproject_save_files} macro
 
+    Returns list of paths for the %file section
+    """
+    record_path = locate_record(buildroot, python3_sitelib, python3_sitearch)
+    parsed_record = parse_record(record_path, read_record(buildroot, record_path))
+    paths_dict = classify_paths(record_path, parsed_record, python3_sitelib,
+                                python3_sitearch, bindir)
     files = generate_file_list(record_path, python3_sitelib, python3_sitearch,
-                               paths_dict, *pyproject_save_files_parse(args))
+                               paths_dict, *parse_globs(globs_to_save))
 
     return files
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument("path_to_save", help="Path to save list of paths for file secton", type=lambda x: Path(x))
-parser.add_argument('buildroot', type=lambda x: Path(x))
-parser.add_argument('python3_sitelib', type=lambda x: PurePath(x))
-parser.add_argument('python3_sitearch', type=lambda x: PurePath(x))
-parser.add_argument('bindir', type=lambda x: PurePath(x))
-parser.add_argument("globs_to_save", nargs="+")
-
-
 def main(cli_args):
-    file_section = pyproject_save_files(cli_args.buildroot, cli_args.python3_sitelib, cli_args.python3_sitearch,
-                                        cli_args.bindir, cli_args.globs_to_save)
+    file_section = pyproject_save_files(cli_args.buildroot,
+                                        cli_args.python3_sitelib,
+                                        cli_args.python3_sitearch,
+                                        cli_args.bindir,
+                                        cli_args.globs_to_save)
 
-    with open(cli_args.path_to_save, "w") as file:
-        file.writelines([path + "\n" for path in file_section])
+    cli_args.path_to_save.write_text("\n".join(file_section) + "\n")
+
+
+def argparser():
+    p = argparse.ArgumentParser()
+    p.add_argument("path_to_save", help="Path to save list of paths for file secton", type=Path)
+    p.add_argument('buildroot', type=Path)
+    p.add_argument('python3_sitelib', type=PurePath)
+    p.add_argument('python3_sitearch', type=PurePath)
+    p.add_argument('bindir', type=PurePath)
+    p.add_argument("globs_to_save", nargs="+")
+    return p
 
 
 if __name__ == '__main__':
-    cli_args = parser.parse_args()
+    cli_args = argparser().parse_args()
     main(cli_args)

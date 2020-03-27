@@ -286,9 +286,9 @@ def test_generate_file_list_with_executables(package, glob, expected):
     assert tested == files
 
 
-def test_pyproject_save_files_parse():
-    tested = [pyproject_save_files_parse(["requests*", "kerberos", "+bindir"]),
-              pyproject_save_files_parse(["tldr", "tensorf*"])]
+def test_parse_globs():
+    tested = [parse_globs(["requests*", "kerberos", "+bindir"]),
+              parse_globs(["tldr", "tensorf*"])]
 
     expected = [(["requests*", "kerberos"], True), (["tldr", "tensorf*"], False)]
     assert tested == expected
@@ -323,7 +323,7 @@ def test_cli(tmp_path, package, glob, expected):
     buildir = tmp_path / "builddir"
     buildir.mkdir()
     pyproject_files_path = buildir / "files"
-    cli_args = parser.parse_args([str(pyproject_files_path),
+    cli_args = argparser().parse_args([str(pyproject_files_path),
                                   mock_root,
                                   "/usr/lib/python3.7/site-packages",
                                   "/usr/lib64/python3.7/site-packages", "/usr/bin", glob])
@@ -343,7 +343,7 @@ def test_not_find_RECORD(tmp_path):
     buildir = tmp_path / "builddir"
     buildir.mkdir()
     pyproject_files_path = buildir / "files"
-    cli_args = parser.parse_args([str(pyproject_files_path),
+    cli_args = argparser().parse_args([str(pyproject_files_path),
                                   mock_root,
                                   "/usr/lib/python3.7/site-packages",
                                   "/usr/lib64/python3.7/site-packages", "/usr/bin", "tldr*"])
@@ -361,7 +361,7 @@ def test_find_too_many_RECORDS(tmp_path):
     buildir = tmp_path / "builddir"
     buildir.mkdir()
     pyproject_files_path = buildir / "files"
-    cli_args = parser.parse_args([str(pyproject_files_path),
+    cli_args = argparser().parse_args([str(pyproject_files_path),
                                   mock_root,
                                   "/usr/lib/python3.7/site-packages",
                                   "/usr/lib64/python3.7/site-packages", "/usr/bin", "tldr*"])
