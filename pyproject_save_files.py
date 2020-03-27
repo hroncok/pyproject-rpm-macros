@@ -16,6 +16,30 @@ def delete_commonpath(longer_path, prefix):
     return PurePath('/') / PurePath(longer_path).relative_to(prefix)
 
 
+def real2buildroot(root, realpath):
+    """
+    For a given real disk path, return an "absolute" path relative to .
+
+    For example::
+
+        >>> real2buildroot(Path('/tmp/buildroot'), Path('/tmp/buildroot/foo'))
+        PurePosixPath('/foo')
+    """
+    return PurePath("/") / realpath.relative_to(root)
+
+
+def buildroot2real(root, buildrootpath):
+    """
+    For an "absolute" path relative to root, return a real absolute path
+
+    For example::
+
+        >>> buildroot2real(Path('/tmp/buildroot'), PurePath('/foo'))
+        PosixPath('/tmp/buildroot/foo')
+    """
+    return root / buildrootpath.relative_to('/')
+
+
 def _sitedires(sitelib, sitearch):
     """
     On 32 bit architectures, sitelib equals to sitearch.
@@ -32,12 +56,12 @@ def locate_record(root, sitedirs):
     Only RECORDs in dist-info dirs inside sitelib/sitearch are considered.
     There can only be one RECORD file.
 
-    Returns path to the RECORD file, relative to root, looking like absolute.
+    Returns real absolute path to the RECORD file.
     """
 
     records = []
     for sitedir in sitedirs:
-        records.extend((root / sitedir.relative_to('/')).glob('*.dist-info/RECORD'))
+        records.extend(buildroot2real(root, sitedir).glob('*.dist-info/RECORD'))
 
     sitedirs_text = ", ".join(str(p) for p in sitedirs)
     if len(records) == 0:
@@ -45,23 +69,21 @@ def locate_record(root, sitedirs):
     if len(records) > 1:
         raise FileExistsError(f"Multiple *.dist-info directories in {sitedirs_text}")
 
-    return PurePath("/") / records[0].relative_to(root)
+    return records[0]
 
 
-def read_record(root, record_path):
-    """returns parsed list of triplets like: [(path, hash, size), ...]"""
+def read_record(record_path):
+    """
+    A generator yielding individual RECORD triplets.
 
-    root = Path(root)
-    record_path = Path(record_path)
-    # can't join both absolute like paths properly
-    try:
-        record_path = Path(record_path).relative_to("/")
-    except ValueError:
-        record_path = Path(record_path)
+    https://www.python.org/dev/peps/pep-0376/#record
 
-    with open(root / record_path, newline='', encoding='utf-8') as f:
-        content = csv.reader(f, delimiter=',', quotechar='"', lineterminator=os.linesep)
-        yield from content
+    The triplet is path, hash, size, with the last two optional.
+    We will later care only for the paths anyway.
+    """
+
+    with open(record_path, newline='', encoding='utf-8') as f:
+        yield from csv.reader(f, delimiter=',', quotechar='"', lineterminator=os.linesep)
 
 
 def parse_record(record_path, record_content):
@@ -321,8 +343,11 @@ def pyproject_save_files(buildroot, sitelib, sitearch,
     Returns list of paths for the %file section
     """
     sitedirs = _sitedires(sitelib, sitearch)
-    record_path = locate_record(buildroot, sitedirs)
-    parsed_record = parse_record(record_path, read_record(buildroot, record_path))
+
+    record_path_real = locate_record(buildroot, sitedirs)
+    record_path = real2buildroot(buildroot, record_path_real)
+    parsed_record = parse_record(record_path, read_record(record_path_real))
+
     paths_dict = classify_paths(record_path, parsed_record,
                                 sitelib, sitearch, sitedirs, bindir)
     files = generate_file_list(record_path, sitelib, sitearch,
@@ -338,7 +363,8 @@ def main(cli_args):
                                         cli_args.bindir,
                                         cli_args.globs_to_save)
 
-    cli_args.path_to_save.write_text("\n".join(file_section) + "\n")
+    cli_args.path_to_save.write_text("\n".join(file_section) + "\n",
+                                     encoding='utf-8')
 
 
 def argparser():

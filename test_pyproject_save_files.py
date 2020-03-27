@@ -12,14 +12,14 @@ from pathlib import Path
 import shutil
 import sys
 
-RECORDS_PATH = f"{Path(__file__).parent}"
+RECORDS_PATH = Path(__file__).parent
 SITELIB = PurePath("/usr/lib/python3.7/site-packages")
 SITEARCH = PurePath("/usr/lib64/python3.7/site-packages")
 
 
 def test_parse_record_kerberos():
     """test if RECORD file is parsed properly"""
-    record_content = read_record(RECORDS_PATH, "test_RECORD_kerberos")
+    record_content = read_record(RECORDS_PATH / "test_RECORD_kerberos")
     output = parse_record("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/RECORD", record_content)
     expected = [PurePath("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/INSTALLER"),
                 PurePath("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/METADATA"),
@@ -92,7 +92,7 @@ def test_find_extension():
 def test_find_script():
     dist_info_dir = Path("tldr-0.5.dist-info/")
     python3_sitedir = PurePath("/usr/lib64/python3.7/site-packages")
-    record_content = read_record(Path(RECORDS_PATH), Path("test_RECORD_tldr"))
+    record_content = read_record(RECORDS_PATH / "test_RECORD_tldr")
     record_path = python3_sitedir / dist_info_dir / "RECORD"
     parsed_record_content = parse_record(record_path, record_content)
     expected = (["/usr/lib64/python3.7/site-packages/tldr.py"],
@@ -107,7 +107,7 @@ def test_find_package():
     dist_info_dir = PurePath("requests-2.22.0.dist-info/")
     python3_sitedir = PurePath("/usr/lib/python3.7/site-packages")
     python3_sitearch = PurePath("/usr/lib64/python3.7/site-packages")
-    record_content = read_record(RECORDS_PATH, "test_RECORD_requests")
+    record_content = read_record(RECORDS_PATH / "test_RECORD_requests")
     record_path = python3_sitedir / dist_info_dir / "RECORD"
     parsed_record_content = parse_record(record_path, record_content)
 
@@ -172,43 +172,6 @@ for package in TEST_RECORDS:
     test_data.append((*TEST_RECORDS[package], PARAMETRIZED_EXPECTED_OUTPUT[package]))
 
 del package
-
-
-# @pytest.mark.filterwarnings('ignore::UserWarning')  # to ignore warning for uncathegorized files
-# @pytest.mark.parametrize("supposed_record_path, rel_record_path, expected", test_data)
-# def test_classify_paths(supposed_record_path, rel_record_path, expected):
-#     """test categorization of files"""
-#     root = str(Path(RECORDS_PATH).parent)
-#     python3_sitelib = PurePath("/usr/lib/python3.7/site-packages")
-#     python3_sitearch = PurePath("/usr/lib64/python3.7/site-packages")
-#     bindir = PurePath("/usr/bin")
-#
-#     record_contents = read_record(RECORDS_PATH, rel_record_path)
-#     record_contents = parse_record(supposed_record_path,
-#                                    record_contents)
-#
-#     output = classify_paths(supposed_record_path, record_contents, python3_sitelib, python3_sitearch, bindir)
-#     assert output == expected
-
-# right now there is no package which would have warning
-# def test_warning_classify_paths():
-#     """test categorization of files"""
-#     supposed_record_path, rel_record_path = TEST_RECORDS["tensorflow"]
-#     warned_files = PARAMETRIZED_EXPECTED_OUTPUT["tensorflow"]["other"]["files"]
-#     root = str(Path(RECORDS_PATH).parent)
-#     python3_sitelib = PurePath("/usr/lib/python3.7/site-packages")
-#     python3_sitearch = PurePath("/usr/lib64/python3.7/site-packages")
-#     bindir = PurePath("/usr/bin")
-#
-#     record_contents = read_record(RECORDS_PATH, rel_record_path)
-#     record_contents = parse_record(supposed_record_path,
-#                                    record_contents)
-#
-#     with pytest.warns(UserWarning) as record:
-#         output = classify_paths(PurePath(supposed_record_path), record_contents, python3_sitelib, python3_sitearch, bindir)
-#
-#     assert pformat(warned_files) in record[0].message.args[0]
-
 
 file_section = (
     ("tensorflow", "tensorflow*", sorted([
