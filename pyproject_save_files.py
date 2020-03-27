@@ -270,9 +270,7 @@ def main(cli_args):
 
 def argparser():
     p = argparse.ArgumentParser()
-    p.add_argument(
-        "path_to_save", help="Path to save list of paths for file section", type=Path
-    )
+    p.add_argument("path_to_save", type=Path)
     p.add_argument("buildroot", type=Path)
     p.add_argument("sitelib", type=PurePath)
     p.add_argument("sitearch", type=PurePath)
