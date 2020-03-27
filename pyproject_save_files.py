@@ -87,21 +87,24 @@ def read_record(record_path):
 
 
 def parse_record(record_path, record_content):
-    """return list of paths stripped of root
+    """
+    Returns a list of absolute buildroot paths
 
     params:
-    record_path: path to record file stripped of root
-    record_content: list of files relative to directory where dist-info directory is
+    record_path: RECORD buildroot path
+    record_content: list of RECORD triplets
+                    first item is path relative to directory where dist-info directory is
 
     Example:
-        parse_record("/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/RECORD", ["requests", ...])
-            -> ["/usr/lib/python3.7/site-packages/requests", ...]
-    """
-    record_path = PurePath(record_path)
 
-    site_dir = PurePath(record_path).parent.parent
-    files = [PurePath(os.path.normpath(Path(site_dir)/row[0])) for row in record_content]
-    return files
+        >>> parse_record("/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/RECORD", [("requests/sessions.py", ...), ...])
+        [PurePosixPath("/usr/lib/python3.7/site-packages/requests/sessions.py"), ...]
+
+    TODO make this a generator once we only read this once
+    """
+    sitedir = record_path.parent.parent  # trough the dist-info directory
+    # PurePaths don't have .resolve(), so we make a trip to str and back :(
+    return [PurePath(os.path.normpath(sitedir / row[0])) for row in record_content]
 
 
 

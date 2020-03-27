@@ -20,7 +20,7 @@ SITEARCH = PurePath("/usr/lib64/python3.7/site-packages")
 def test_parse_record_kerberos():
     """test if RECORD file is parsed properly"""
     record_content = read_record(RECORDS_PATH / "test_RECORD_kerberos")
-    output = parse_record("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/RECORD", record_content)
+    output = parse_record(PurePath("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/RECORD"), record_content)
     expected = [PurePath("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/INSTALLER"),
                 PurePath("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/METADATA"),
                 PurePath("/usr/lib64/python3.7/site-packages/kerberos-1.3.0.dist-info/RECORD"),
@@ -42,7 +42,7 @@ def test_parse_record_tensorflow():
             "sha256=7RAlc1tDVIXyRwVp3YaGHzQb9xzSXwUh89XYdN2JE-c", "1024"],
         ["tensorflow-2.1.0.dist-info/METADATA", "sha256=g5W3QfLBbDHaqVmDvLXQIV2KfDFQe9zssq4fKz-Rah4", "2859"],
     ]
-    output = parse_record(f"{dist_info_prefix}/{dist_info_dir}/RECORD", record_content)
+    output = parse_record(PurePath(f"{dist_info_prefix}/{dist_info_dir}/RECORD"), record_content)
 
     pprint(output)
     expected = [PurePath('/usr/bin/toco_from_protos'),
