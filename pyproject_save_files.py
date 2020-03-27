@@ -16,19 +16,36 @@ def delete_commonpath(longer_path, prefix):
     return PurePath('/') / PurePath(longer_path).relative_to(prefix)
 
 
-def locate_record(root, python3_sitelib, python3_sitearch):
-    """return path to record stripped of root path."""
+def _sitedires(sitelib, sitearch):
+    """
+    On 32 bit architectures, sitelib equals to sitearch.
+    This helper function will return a list of possible values to save us
+    browsing one directory twice.
+    """
+    return sorted({sitelib, sitearch})
 
-    records = list((Path(root) / Path(python3_sitelib).relative_to('/')).glob('*.dist-info/RECORD'))
-    records.extend(list((Path(root) / Path(python3_sitearch).relative_to('/')).glob('*.dist-info/RECORD')))
 
+def locate_record(root, sitedirs):
+    """
+    Find a RECORD path in the given root.
+    sitelib/sitearch is relative to root (looking like absolute)
+    Only RECORDs in dist-info dirs inside sitelib/sitearch are considered.
+    There can only be one RECORD file.
+
+    Returns path to the RECORD file, relative to root, looking like absolute.
+    """
+
+    records = []
+    for sitedir in sitedirs:
+        records.extend((root / sitedir.relative_to('/')).glob('*.dist-info/RECORD'))
+
+    sitedirs_text = ", ".join(str(p) for p in sitedirs)
     if len(records) == 0:
-        raise FileNotFoundError("Did not find RECORD file")
+        raise FileNotFoundError(f"There is no *.dist-info/RECORD in {sitedirs_text}")
     if len(records) > 1:
-        raise FileExistsError("Multiple *.dist-info directories")
+        raise FileExistsError(f"Multiple *.dist-info directories in {sitedirs_text}")
 
-    record_path = str(records[0])
-    return Path("/") / Path(delete_commonpath(record_path, root))
+    return PurePath("/") / records[0].relative_to(root)
 
 
 def read_record(root, record_path):
@@ -114,11 +131,11 @@ def find_script(python3_sitedir, parsed_record_content):
     return scripts, scripts + pycache
 
 
-def find_package(python3_sitelib, python3_sitearch, parsed_record_content):
+def find_package(sitelib, sitearch, parsed_record_content):
     """return tuple([package dirs], [all package files])"""
 
     packages = set()
-    for sitedir in (python3_sitelib, python3_sitearch):
+    for sitedir in (sitelib, sitearch):
 
         sitedir_len = len(sitedir.parts)
         for path in parsed_record_content:
@@ -183,28 +200,28 @@ def get_modules(packages, extension_files,
     return modules
 
 
-def get_modules_directory(record_path, python3_sitelib, python3_sitearch):
+def get_modules_directory(record_path, sitelib, sitearch):
     """find out directory where modules should be located"""
     record_path = os.path.normpath(record_path)
-    python3_sitearch = os.path.normpath(python3_sitearch)
-    python3_sitelib = os.path.normpath(python3_sitelib)
+    sitearch = os.path.normpath(sitearch)
+    sitelib = os.path.normpath(sitelib)
 
-    if os.path.commonpath((python3_sitelib, record_path)) == python3_sitelib:
-        modules_dir = python3_sitelib
-    elif os.path.commonpath((python3_sitearch, record_path)) == python3_sitearch:
-        modules_dir = python3_sitearch
+    if os.path.commonpath((sitelib, record_path)) == sitelib:
+        modules_dir = sitelib
+    elif os.path.commonpath((sitearch, record_path)) == sitearch:
+        modules_dir = sitearch
     else:
-        assert False, f"""python3_sitelib: {python3_sitelib} or python3_sitearch: {python3_sitearch} does not
+        assert False, f"""sitelib: {sitelib} or sitearch: {sitearch} does not
         contain RECORD file: {record_path}"""
 
     return PurePath(modules_dir)
 
 
-def classify_paths(record_path, parsed_record_content, python3_sitelib, python3_sitearch, bindir):
+def classify_paths(record_path, parsed_record_content, sitelib, sitearch, bindir):
     """return dict with logical representation of files"""
 
-    python3_sitedir = get_modules_directory(record_path, python3_sitelib, python3_sitearch)
-    packages, package_files = find_package(python3_sitelib, python3_sitearch, parsed_record_content)
+    python3_sitedir = get_modules_directory(record_path, sitelib, sitearch)
+    packages, package_files = find_package(sitelib, sitearch, parsed_record_content)
     for file in package_files:
         file = PurePath(file)
         parsed_record_content.remove(file)
@@ -250,7 +267,7 @@ def classify_paths(record_path, parsed_record_content, python3_sitelib, python3_
     return paths
 
 
-def generate_file_list(record_path, python3_sitelib, python3_sitearch,
+def generate_file_list(record_path, sitelib, sitearch,
                        paths_dict, modules_glob,
                        include_executables = False):
     """generated list of files to be added to specfile %file"""
@@ -266,7 +283,7 @@ def generate_file_list(record_path, python3_sitelib, python3_sitearch,
                             # adding pycached files
                             script_and_pycache.append(file)
                             pyminor = str(sys.version_info[1])
-                            dirname = str(get_modules_directory(record_path, python3_sitelib, python3_sitearch))
+                            dirname = str(get_modules_directory(record_path, sitelib, sitearch))
                             modulename = PurePath(delete_commonpath(file, dirname)).stem
                             script_and_pycache.append(dirname + "/__pycache__/" + modulename + ".cpython-3" + pyminor +
                                                       "{,.opt-?}.pyc")
@@ -296,18 +313,19 @@ def parse_globs(nargs):
     return nargs, include_bindir
 
 
-def pyproject_save_files(buildroot, python3_sitelib, python3_sitearch,
+def pyproject_save_files(buildroot, sitelib, sitearch,
                          bindir, globs_to_save):
     """
     Takes arguments from the %{pyproject_save_files} macro
 
     Returns list of paths for the %file section
     """
-    record_path = locate_record(buildroot, python3_sitelib, python3_sitearch)
+    sitedirs = _sitedires(sitelib, sitearch)
+    record_path = locate_record(buildroot, sitedirs)
     parsed_record = parse_record(record_path, read_record(buildroot, record_path))
-    paths_dict = classify_paths(record_path, parsed_record, python3_sitelib,
-                                python3_sitearch, bindir)
-    files = generate_file_list(record_path, python3_sitelib, python3_sitearch,
+    paths_dict = classify_paths(record_path, parsed_record, sitelib,
+                                sitearch, bindir)
+    files = generate_file_list(record_path, sitelib, sitearch,
                                paths_dict, *parse_globs(globs_to_save))
 
     return files
@@ -315,8 +333,8 @@ def pyproject_save_files(buildroot, python3_sitelib, python3_sitearch,
 
 def main(cli_args):
     file_section = pyproject_save_files(cli_args.buildroot,
-                                        cli_args.python3_sitelib,
-                                        cli_args.python3_sitearch,
+                                        cli_args.sitelib,
+                                        cli_args.sitearch,
                                         cli_args.bindir,
                                         cli_args.globs_to_save)
 
@@ -327,8 +345,8 @@ def argparser():
     p = argparse.ArgumentParser()
     p.add_argument("path_to_save", help="Path to save list of paths for file secton", type=Path)
     p.add_argument('buildroot', type=Path)
-    p.add_argument('python3_sitelib', type=PurePath)
-    p.add_argument('python3_sitearch', type=PurePath)
+    p.add_argument('sitelib', type=PurePath)
+    p.add_argument('sitearch', type=PurePath)
     p.add_argument('bindir', type=PurePath)
     p.add_argument("globs_to_save", nargs="+")
     return p
