@@ -7,12 +7,12 @@ License:        MIT
 # Keep the version at zero and increment only release
 Version:        0
 Release:        14%{?dist}
+
 Source0:        macros.pyproject
 Source1:        pyproject_buildrequires.py
 Source2:        pyproject_save_files.py
 Source3:        test_pyproject_save_files.py
 Source4:        pyproject_save_files_test_data.json
-
 
 Source8:        README.md
 Source9:        LICENSE
@@ -25,7 +25,6 @@ Source13:       test_RECORD_requests
 Source14:       test_RECORD_tensorflow
 Source15:       test_RECORD_tldr
 Source16:       test_RECORD_mistune
-
 
 URL:            https://src.fedoraproject.org/rpms/pyproject-rpm-macros
 
@@ -83,6 +82,7 @@ mkdir -p %{buildroot}%{_rpmconfigdir}/redhat
 install -m 644 macros.pyproject %{buildroot}%{_rpmmacrodir}/
 install -m 644 pyproject_buildrequires.py %{buildroot}%{_rpmconfigdir}/redhat/
 install -m 644 pyproject_save_files.py  %{buildroot}%{_rpmconfigdir}/redhat/
+
 %if %{with tests}
 %check
 %{__python3} -m pytest -vv
@@ -93,6 +93,7 @@ install -m 644 pyproject_save_files.py  %{buildroot}%{_rpmconfigdir}/redhat/
 %{_rpmmacrodir}/macros.pyproject
 %{_rpmconfigdir}/redhat/pyproject_buildrequires.py
 %{_rpmconfigdir}/redhat/pyproject_save_files.py
+
 %doc README.md
 %license LICENSE
 
