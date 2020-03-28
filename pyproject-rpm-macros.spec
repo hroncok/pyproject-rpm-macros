@@ -8,23 +8,29 @@ License:        MIT
 Version:        0
 Release:        14%{?dist}
 
-Source0:        macros.pyproject
-Source1:        pyproject_buildrequires.py
-Source2:        pyproject_save_files.py
-Source3:        test_pyproject_save_files.py
-Source4:        pyproject_save_files_test_data.json
+# Macro files
+Source001:      macros.pyproject
 
-Source8:        README.md
-Source9:        LICENSE
+# Implementation files
+Source101:      pyproject_buildrequires.py
+Source102:      pyproject_save_files.py
 
-Source10:       test_pyproject_buildrequires.py
-Source11:       pyproject_buildrequires_testcases.yaml
+# Tests
+Source201:      test_pyproject_buildrequires.py
+Source202:      test_pyproject_save_files.py
 
-Source12:       test_RECORD_kerberos
-Source13:       test_RECORD_requests
-Source14:       test_RECORD_tensorflow
-Source15:       test_RECORD_tldr
-Source16:       test_RECORD_mistune
+# Test data
+Source301:      pyproject_buildrequires_testcases.yaml
+Source302:      pyproject_save_files_test_data.json
+Source303:      test_RECORD_kerberos
+Source304:      test_RECORD_mistune
+Source305:      test_RECORD_requests
+Source306:      test_RECORD_tensorflow
+Source307:      test_RECORD_tldr
+
+# Metadata
+Source901:      README.md
+Source902:      LICENSE
 
 URL:            https://src.fedoraproject.org/rpms/pyproject-rpm-macros
 
