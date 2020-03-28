@@ -1,36 +1,64 @@
 import argparse
 import csv
 import fnmatch
+import pathlib
 import os
 import warnings
 import sys
 
 from collections import defaultdict
-from pathlib import Path, PurePath
 
 
-def real2buildroot(root, realpath):
+class RealPath(pathlib.PosixPath):
+    pass
+
+
+class BuildrootPath(pathlib.PurePosixPath):
     """
-    For a given real disk path, return an "absolute" path relative to .
+    This path represents a path in a buildroot.
+    When absolute, it is "relative" to a buildroot.
 
-    For example::
-
-        >>> real2buildroot(Path('/tmp/buildroot'), Path('/tmp/buildroot/foo'))
-        PurePosixPath('/foo')
+    E.g. /usr/lib means %{buildroot}/usr/lib
+    The object carries no buildroot information.
     """
-    return PurePath("/") / realpath.relative_to(root)
 
+    @staticmethod
+    def from_real(realpath, *, root):
+        """
+        For a given real disk path, return a BuildrootPath in give root.
 
-def buildroot2real(root, buildrootpath):
-    """
-    For an "absolute" path relative to root, return a real absolute path
+        For example::
 
-    For example::
+            >>> BuildrootPath.from_real(RealPath('/tmp/buildroot/foo'), root=RealPath('/tmp/buildroot'))
+            BuildrootPath('/foo')
+        """
+        return BuildrootPath("/") / realpath.relative_to(root)
 
-        >>> buildroot2real(Path('/tmp/buildroot'), PurePath('/foo'))
-        PosixPath('/tmp/buildroot/foo')
-    """
-    return root / buildrootpath.relative_to("/")
+    def to_real(self, root):
+        """
+        Return a real Path in the given root
+
+        For example::
+
+            >>> BuildrootPath('/foo').to_real(RealPath('/tmp/buildroot'))
+            RealPath('/tmp/buildroot/foo')
+        """
+        return root / self.relative_to("/")
+
+    def normpath(self):
+        """
+        Normalize all the potential /../ parts of the path without touching real files.
+
+        PurePaths don't have .resolve().
+        Paths have .resolve() but it touches real files.
+        This is an alternative. It assumes there are no symbolic links.
+
+        Example:
+
+            >>> BuildrootPath('/usr/lib/python/../pypy').normpath()
+            BuildrootPath('/usr/lib/pypy')
+        """
+        return type(self)(os.path.normpath(self))
 
 
 def _sitedires(sitelib, sitearch):
@@ -44,17 +72,17 @@ def _sitedires(sitelib, sitearch):
 
 def locate_record(root, sitedirs):
     """
-    Find a RECORD path in the given root.
-    sitedirs are relative to root (looking like absolute)
+    Find a RECORD file in the given root.
+    sitedirs are BuildrootPtahs.
     Only RECORDs in dist-info dirs inside sitedirs are considered.
     There can only be one RECORD file.
 
-    Returns real absolute path to the RECORD file.
+    Returns a RealPath of the RECORD file.
     """
 
     records = []
     for sitedir in sitedirs:
-        records.extend(buildroot2real(root, sitedir).glob("*.dist-info/RECORD"))
+        records.extend(sitedir.to_real(root).glob("*.dist-info/RECORD"))
 
     sitedirs_text = ", ".join(str(p) for p in sitedirs)
     if len(records) == 0:
@@ -71,7 +99,7 @@ def read_record(record_path):
 
     https://www.python.org/dev/peps/pep-0376/#record
 
-    The triplet is path, hash, size, with the last two optional.
+    The triplet is str-path, hash, size, with the last two optional.
     We will later care only for the paths anyway.
     """
 
@@ -83,27 +111,36 @@ def read_record(record_path):
 
 def parse_record(record_path, record_content):
     """
-    Returns a generator with absolute buildroot paths parsed from record_content
+    Returns a generator with BuildrootPaths parsed from record_content
 
     params:
-    record_path: RECORD buildroot path
+    record_path: RECORD BuildrootPath
     record_content: list of RECORD triplets
-                    first item is path relative to directory where dist-info directory is
+                    first item is a str-path relative to directory where dist-info directory is
+                    (it can also be absolute according to the standard, but not from pip)
 
-    Example:
+    Examples:
 
-        >>> next(parse_record("/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/RECORD", [("requests/sessions.py", ...), ...]))
-        PurePosixPath("/usr/lib/python3.7/site-packages/requests/sessions.py")
+        >>> next(parse_record(BuildrootPath("/usr/lib/python3.7/site-packages/requests-2.22.0.dist-info/RECORD"),
+        ...                   [("requests/sessions.py", "sha256=xxx", "666"), ...]))
+        BuildrootPath("/usr/lib/python3.7/site-packages/requests/sessions.py")
+
+        >>> next(parse_record(BuildrootPath("/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/RECORD"),
+        ...                   [("../../../bin/tldr", "sha256=yyy", "777"), ...]))
+        BuildrootPath("/usr/bin/tldr")
     """
     sitedir = record_path.parent.parent  # trough the dist-info directory
-    # PurePaths don't have .resolve(), so we make a trip to str and back :(
-    return (PurePath(os.path.normpath(sitedir / row[0])) for row in record_content)
+    # / with absolute right operand will remove the left operand
+    # any .. parts are resolved via normpath
+    return ((sitedir / row[0]).normpath() for row in record_content)
 
 
 def pycached(script):
     """
-    For a script path, return a list with that path and its bytecode glob.
+    For a script BuildrootPath, return a list with that path and its bytecode glob.
     Like the %pycached macro.
+
+    The glob is represented as a BuildrootPath.
     """
     assert script.suffix == ".py"
     ver = sys.version_info
@@ -129,7 +166,7 @@ def add_file_to_module(paths, module_name, module_type, *files):
 
 def classify_paths(record_path, parsed_record_content, sitedirs, bindir):
     """
-    For each file in parsed_record_content classify it to a dict structure
+    For each BuildrootPath in parsed_record_content classify it to a dict structure
     that allows to filter the files for the %files section easier.
 
     For the dict structure, look at the beginning of the code.
@@ -169,7 +206,7 @@ def classify_paths(record_path, parsed_record_content, sitedirs, bindir):
                 if path.parent == sitedir:
                     if path.suffix == ".so":
                         # extension modules can have 2 suffixes
-                        name = PurePath(path.stem).stem
+                        name = BuildrootPath(path.stem).stem
                         add_file_to_module(paths, name, "extension", path)
                     elif path.suffix == ".py":
                         name = path.stem
@@ -194,7 +231,7 @@ def classify_paths(record_path, parsed_record_content, sitedirs, bindir):
 def generate_file_list(paths_dict, module_globs, include_executables=False):
     """
     This function takes the classified paths_dict and turns it into lines
-    for the %files section. Returns list with text lines, no Paths.
+    for the %files section. Returns list with text lines, no Path objects.
 
     Only includes files from modules that match module_globs, metadata and
     optional executables.
@@ -227,7 +264,7 @@ def parse_globs(nargs):
     """
     Parse nargs from the %pyproject_save_files macro
 
-    Argument +bindir is treated as a flag, everything is a glob
+    Argument +bindir is treated as a flag, everything else is a glob
 
     Returns globs, boolean flag whether to include executables from bindir
     """
@@ -244,12 +281,12 @@ def pyproject_save_files(buildroot, sitelib, sitearch, bindir, globs_to_save):
     """
     Takes arguments from the %{pyproject_save_files} macro
 
-    Returns list of paths for the %file section
+    Returns list of paths for the %files section
     """
     sitedirs = _sitedires(sitelib, sitearch)
 
     record_path_real = locate_record(buildroot, sitedirs)
-    record_path = real2buildroot(buildroot, record_path_real)
+    record_path = BuildrootPath.from_real(record_path_real, root=buildroot)
     parsed_record = parse_record(record_path, read_record(record_path_real))
 
     paths_dict = classify_paths(record_path, parsed_record, sitedirs, bindir)
@@ -270,11 +307,11 @@ def main(cli_args):
 
 def argparser():
     p = argparse.ArgumentParser()
-    p.add_argument("path_to_save", type=Path)
-    p.add_argument("buildroot", type=Path)
-    p.add_argument("sitelib", type=PurePath)
-    p.add_argument("sitearch", type=PurePath)
-    p.add_argument("bindir", type=PurePath)
+    p.add_argument("path_to_save", type=RealPath)
+    p.add_argument("buildroot", type=RealPath)
+    p.add_argument("sitelib", type=BuildrootPath)
+    p.add_argument("sitearch", type=BuildrootPath)
+    p.add_argument("bindir", type=BuildrootPath)
     p.add_argument("globs_to_save", nargs="+")
     return p
 

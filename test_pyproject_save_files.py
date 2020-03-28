@@ -3,17 +3,18 @@ import pytest
 import shutil
 import sys
 
+from pathlib import Path
 from pprint import pprint
-from pathlib import Path, PurePath
 
 from pyproject_save_files import argparser, generate_file_list, main
 from pyproject_save_files import parse_globs, parse_record, read_record
+from pyproject_save_files import BuildrootPath
 
 
 RECORDS = Path(__file__).parent
-BINDIR = PurePath("/usr/bin")
-SITELIB = PurePath("/usr/lib/python3.7/site-packages")
-SITEARCH = PurePath("/usr/lib64/python3.7/site-packages")
+BINDIR = BuildrootPath("/usr/bin")
+SITELIB = BuildrootPath("/usr/lib/python3.7/site-packages")
+SITEARCH = BuildrootPath("/usr/lib64/python3.7/site-packages")
 
 json_file = RECORDS / "pyproject_save_files_test_data.json"
 json_data = json.loads(json_file.read_text())
@@ -159,7 +160,9 @@ def test_cli(tmp_path, package, glob, expected, include_executables):
 
 
 def test_not_find_RECORD(tmp_path):
-    mock_root = create_root(tmp_path, PurePath("/usr/lib/RECORD"), "test_RECORD_tldr")
+    mock_root = create_root(
+        tmp_path, BuildrootPath("/usr/lib/RECORD"), "test_RECORD_tldr"
+    )
     pyproject_files_path = tmp_path / "files"
     cli_args = argparser().parse_args(
         [
