@@ -61,15 +61,6 @@ class BuildrootPath(pathlib.PurePosixPath):
         return type(self)(os.path.normpath(self))
 
 
-def _sitedires(sitelib, sitearch):
-    """
-    On 32 bit architectures, sitelib equals to sitearch.
-    This helper function will return a list of possible values to save us
-    browsing one directory twice.
-    """
-    return sorted({sitelib, sitearch})
-
-
 def locate_record(root, sitedirs):
     """
     Find a RECORD file in the given root.
@@ -283,7 +274,9 @@ def pyproject_save_files(buildroot, sitelib, sitearch, bindir, globs_to_save):
 
     Returns list of paths for the %files section
     """
-    sitedirs = _sitedires(sitelib, sitearch)
+    # On 32 bit architectures, sitelib equals to sitearch
+    # This saves us browsing one directory twice
+    sitedirs = sorted({sitelib, sitearch})
 
     record_path_real = locate_record(buildroot, sitedirs)
     record_path = BuildrootPath.from_real(record_path_real, root=buildroot)
