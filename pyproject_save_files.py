@@ -70,7 +70,6 @@ def locate_record(root, sitedirs):
 
     Returns a RealPath of the RECORD file.
     """
-
     records = []
     for sitedir in sitedirs:
         records.extend(sitedir.to_real(root).glob("*.dist-info/RECORD"))
@@ -90,10 +89,9 @@ def read_record(record_path):
 
     https://www.python.org/dev/peps/pep-0376/#record
 
-    The triplet is str-path, hash, size, with the last two optional.
+    The triplet is str-path, hash, size -- the last two optional.
     We will later care only for the paths anyway.
     """
-
     with open(record_path, newline="", encoding="utf-8") as f:
         yield from csv.reader(
             f, delimiter=",", quotechar='"', lineterminator=os.linesep
