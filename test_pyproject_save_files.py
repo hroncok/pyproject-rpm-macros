@@ -3,11 +3,12 @@ import pytest
 import shutil
 import sys
 
+from argparse import ArgumentError
 from pathlib import Path
 from pprint import pprint
 
 from pyproject_save_files import argparser, generate_file_list, main
-from pyproject_save_files import parse_globs, parse_record, read_record
+from pyproject_save_files import parse_varargs, parse_record, read_record
 from pyproject_save_files import BuildrootPath
 
 
@@ -104,14 +105,22 @@ def test_generate_file_list(package, glob, expected, include_executables):
 @pytest.mark.parametrize(
     "arguments, output",
     [
-        (["requests*", "kerberos", "+bindir"], (["requests*", "kerberos"], True)),
-        (["tldr", "tensorf*"], (["tldr", "tensorf*"], False)),
-        (["+bindir"], ([], True)),
-        (["+kinkdir"], (["+kinkdir"], False)),
+        (["requests*", "kerberos", "+bindir"], ({"requests*", "kerberos"}, True)),
+        (["tldr", "tensorf*"], ({"tldr", "tensorf*"}, False)),
+        (["+bindir"], (set(), True)),
     ],
 )
-def test_parse_globs(arguments, output):
-    assert parse_globs(arguments) == output
+def test_parse_varargs_good(arguments, output):
+    assert parse_varargs(arguments) == output
+
+
+@pytest.mark.parametrize(
+    "arguments, first_bad", [(["+kinkdir"], 0), (["good", "+bad", "*ugly*"], 1)],
+)
+def test_parse_varargs_bad(arguments, first_bad):
+    with pytest.raises(ArgumentError) as excinfo:
+        parse_varargs(arguments)
+    assert str(excinfo.value) == f"Invalid argument: {arguments[first_bad]}"
 
 
 def create_root(tmp_path, record_path, rel_path_record):

@@ -247,21 +247,29 @@ def generate_file_list(paths_dict, module_globs, include_executables=False):
     return sorted(files)
 
 
-def parse_globs(varargs):
+def parse_varargs(varargs):
     """
     Parse varargs from the %pyproject_save_files macro
 
-    Argument +bindir is treated as a flag, everything else is a glob
+    Arguments starting with + are treated as a flags, everything else is a glob
 
-    Returns globs, boolean flag whether to include executables from bindir
+    Returns as set of globs, boolean flag whether to include executables from bindir
+
+    Raises ArgumentError for unknown flags
     """
     include_bindir = False
+    globs = set()
 
-    if "+bindir" in varargs:
-        include_bindir = True
-        varargs.remove("+bindir")
+    for arg in varargs:
+        if arg.startswith("+"):
+            if arg == "+bindir":
+                include_bindir = True
+            else:
+                raise argparse.ArgumentError(None, f"Invalid argument: {arg}")
+        else:
+            globs.add(arg)
 
-    return varargs, include_bindir
+    return globs, include_bindir
 
 
 def pyproject_save_files(buildroot, sitelib, sitearch, bindir, globs_to_save):
@@ -279,7 +287,7 @@ def pyproject_save_files(buildroot, sitelib, sitearch, bindir, globs_to_save):
     parsed_record = parse_record(record_path, read_record(record_path_real))
 
     paths_dict = classify_paths(record_path, parsed_record, sitedirs, bindir)
-    return generate_file_list(paths_dict, *parse_globs(globs_to_save))
+    return generate_file_list(paths_dict, *parse_varargs(globs_to_save))
 
 
 def main(cli_args):
