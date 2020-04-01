@@ -272,7 +272,7 @@ def parse_varargs(varargs):
     return globs, include_bindir
 
 
-def pyproject_save_files(buildroot, sitelib, sitearch, bindir, globs_to_save):
+def pyproject_save_files(buildroot, sitelib, sitearch, bindir, varargs):
     """
     Takes arguments from the %{pyproject_save_files} macro
 
@@ -282,12 +282,13 @@ def pyproject_save_files(buildroot, sitelib, sitearch, bindir, globs_to_save):
     # This saves us browsing one directory twice
     sitedirs = sorted({sitelib, sitearch})
 
+    globs, include_bindir = parse_varargs(varargs)
     record_path_real = locate_record(buildroot, sitedirs)
     record_path = BuildrootPath.from_real(record_path_real, root=buildroot)
     parsed_record = parse_record(record_path, read_record(record_path_real))
 
     paths_dict = classify_paths(record_path, parsed_record, sitedirs, bindir)
-    return generate_file_list(paths_dict, *parse_varargs(globs_to_save))
+    return generate_file_list(paths_dict, globs, include_bindir)
 
 
 def main(cli_args):
@@ -296,7 +297,7 @@ def main(cli_args):
         cli_args.sitelib,
         cli_args.sitearch,
         cli_args.bindir,
-        cli_args.globs_to_save,
+        cli_args.varargs,
     )
 
     cli_args.path_to_save.write_text("\n".join(file_section) + "\n", encoding="utf-8")
@@ -309,7 +310,7 @@ def argparser():
     p.add_argument("sitelib", type=BuildrootPath)
     p.add_argument("sitearch", type=BuildrootPath)
     p.add_argument("bindir", type=BuildrootPath)
-    p.add_argument("globs_to_save", nargs="+")
+    p.add_argument("varargs", nargs="+")
     return p
 
 

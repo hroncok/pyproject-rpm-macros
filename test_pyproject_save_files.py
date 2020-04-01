@@ -168,7 +168,7 @@ def test_cli(tmp_path, package, glob, expected, include_executables):
     assert tested == "\n".join(expected) + "\n"
 
 
-def test_not_find_RECORD(tmp_path):
+def test_cli_not_find_RECORD(tmp_path):
     mock_root = create_root(
         tmp_path, BuildrootPath("/usr/lib/RECORD"), "test_RECORD_tldr"
     )
@@ -188,7 +188,7 @@ def test_not_find_RECORD(tmp_path):
         main(cli_args)
 
 
-def test_find_too_many_RECORDS(tmp_path):
+def test_cli_find_too_many_RECORDS(tmp_path):
     mock_root = create_root(tmp_path, TEST_RECORDS["tldr"], "test_RECORD_tldr")
     create_root(tmp_path, TEST_RECORDS["tensorflow"], "test_RECORD_tensorflow")
     pyproject_files_path = tmp_path / "files"
@@ -204,4 +204,23 @@ def test_find_too_many_RECORDS(tmp_path):
     )
 
     with pytest.raises(FileExistsError):
+        main(cli_args)
+
+
+def test_cli_bad_argument(tmp_path):
+    mock_root = create_root(tmp_path, TEST_RECORDS["tldr"], "test_RECORD_tldr")
+    pyproject_files_path = tmp_path / "files"
+    cli_args = argparser().parse_args(
+        [
+            str(pyproject_files_path),
+            str(mock_root),
+            str(SITELIB),
+            str(SITEARCH),
+            str(BINDIR),
+            "tldr*",
+            "+foodir",
+        ]
+    )
+
+    with pytest.raises(ArgumentError):
         main(cli_args)
