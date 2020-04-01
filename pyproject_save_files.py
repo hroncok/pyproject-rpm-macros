@@ -249,9 +249,9 @@ def generate_file_list(paths_dict, module_globs, include_executables=False):
     return sorted(files)
 
 
-def parse_globs(nargs):
+def parse_globs(varargs):
     """
-    Parse nargs from the %pyproject_save_files macro
+    Parse varargs from the %pyproject_save_files macro
 
     Argument +bindir is treated as a flag, everything else is a glob
 
@@ -259,11 +259,11 @@ def parse_globs(nargs):
     """
     include_bindir = False
 
-    if "+bindir" in nargs:
+    if "+bindir" in varargs:
         include_bindir = True
-        nargs.remove("+bindir")
+        varargs.remove("+bindir")
 
-    return nargs, include_bindir
+    return varargs, include_bindir
 
 
 def pyproject_save_files(buildroot, sitelib, sitearch, bindir, globs_to_save):
