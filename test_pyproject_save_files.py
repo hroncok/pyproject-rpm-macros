@@ -123,7 +123,7 @@ def create_root(tmp_path, record_path, rel_path_record):
     rel_path_record: relative path to test RECORD file
 
     example:
-    create_root(tmp_path, '/usr/lib/python/tldr-0.5.dist-info/RECORD', 'test_RECORD_tldr')
+    create_root(Path('tmp'), '/usr/lib/python/tldr-0.5.dist-info/RECORD', 'test_RECORD_tldr')
     -> copy RECORD file and creates subdirectories in 'tmp/buildroot/usr/lib/python/tldr-0.5.dist-info/RECORD'
     """
 
