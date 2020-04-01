@@ -25,7 +25,7 @@ class BuildrootPath(pathlib.PurePosixPath):
     @staticmethod
     def from_real(realpath, *, root):
         """
-        For a given real disk path, return a BuildrootPath in give root.
+        For a given real disk path, return a BuildrootPath in the given root.
 
         For example::
 
@@ -64,7 +64,7 @@ class BuildrootPath(pathlib.PurePosixPath):
 def locate_record(root, sitedirs):
     """
     Find a RECORD file in the given root.
-    sitedirs are BuildrootPtahs.
+    sitedirs are BuildrootPaths.
     Only RECORDs in dist-info dirs inside sitedirs are considered.
     There can only be one RECORD file.
 
@@ -158,7 +158,7 @@ def classify_paths(record_path, parsed_record_content, sitedirs, bindir):
     For each BuildrootPath in parsed_record_content classify it to a dict structure
     that allows to filter the files for the %files section easier.
 
-    For the dict structure, look at the beginning of the code.
+    For the dict structure, look at the beginning of this function's code.
 
     Each "module" is a dict with "type" ("package", "script", "extension") and "files".
     """
