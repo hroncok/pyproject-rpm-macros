@@ -1,19 +1,15 @@
 import argparse
 import csv
 import fnmatch
-import pathlib
 import os
 import warnings
 import sys
 
 from collections import defaultdict
+from pathlib import PosixPath, PurePosixPath
 
 
-class RealPath(pathlib.PosixPath):
-    pass
-
-
-class BuildrootPath(pathlib.PurePosixPath):
+class BuildrootPath(PurePosixPath):
     """
     This path represents a path in a buildroot.
     When absolute, it is "relative" to a buildroot.
@@ -29,19 +25,19 @@ class BuildrootPath(pathlib.PurePosixPath):
 
         For example::
 
-            >>> BuildrootPath.from_real(RealPath('/tmp/buildroot/foo'), root=RealPath('/tmp/buildroot'))
+            >>> BuildrootPath.from_real(PosixPath('/tmp/buildroot/foo'), root=PosixPath('/tmp/buildroot'))
             BuildrootPath('/foo')
         """
         return BuildrootPath("/") / realpath.relative_to(root)
 
     def to_real(self, root):
         """
-        Return a real Path in the given root
+        Return a real PosixPath in the given root
 
         For example::
 
-            >>> BuildrootPath('/foo').to_real(RealPath('/tmp/buildroot'))
-            RealPath('/tmp/buildroot/foo')
+            >>> BuildrootPath('/foo').to_real(PosixPath('/tmp/buildroot'))
+            PosixPath('/tmp/buildroot/foo')
         """
         return root / self.relative_to("/")
 
@@ -68,7 +64,7 @@ def locate_record(root, sitedirs):
     Only RECORDs in dist-info dirs inside sitedirs are considered.
     There can only be one RECORD file.
 
-    Returns a RealPath of the RECORD file.
+    Returns a PosixPath of the RECORD file.
     """
     records = []
     for sitedir in sitedirs:
@@ -300,8 +296,8 @@ def main(cli_args):
 
 def argparser():
     p = argparse.ArgumentParser()
-    p.add_argument("path_to_save", type=RealPath)
-    p.add_argument("buildroot", type=RealPath)
+    p.add_argument("path_to_save", type=PosixPath)
+    p.add_argument("buildroot", type=PosixPath)
     p.add_argument("sitelib", type=BuildrootPath)
     p.add_argument("sitearch", type=BuildrootPath)
     p.add_argument("bindir", type=BuildrootPath)
