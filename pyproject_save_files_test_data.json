@@ -267,21 +267,6 @@
             ]
         ],
         [
-            "tldr",
-            "nah",
-            [
-                "%dir /usr/lib/python3.7/site-packages/tldr-0.5.dist-info",
-                "/usr/bin/tldr",
-                "/usr/bin/tldr.py",
-                "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/INSTALLER",
-                "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/LICENSE",
-                "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/METADATA",
-                "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/RECORD",
-                "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/WHEEL",
-                "/usr/lib/python3.7/site-packages/tldr-0.5.dist-info/top_level.txt"
-            ]
-        ],
-        [
             "mistune",
             "mistune",
             [
@@ -295,19 +280,6 @@
                 "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/top_level.txt",
                 "/usr/lib64/python3.7/site-packages/mistune.cpython-37m-x86_64-linux-gnu.so",
                 "/usr/lib64/python3.7/site-packages/mistune.py"
-            ]
-        ],
-        [
-            "mistune",
-            "Mistune",
-            [
-                "%dir /usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info",
-                "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/INSTALLER",
-                "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/LICENSE",
-                "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/METADATA",
-                "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/RECORD",
-                "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/WHEEL",
-                "/usr/lib64/python3.7/site-packages/mistune-0.8.3.dist-info/top_level.txt"
             ]
         ]
     ]

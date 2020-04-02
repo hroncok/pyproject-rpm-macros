@@ -222,6 +222,9 @@ def generate_file_list(paths_dict, module_globs, include_executables=False):
 
     Only includes files from modules that match module_globs, metadata and
     optional executables.
+
+    It asserts that all globs match at least one module, raises ValueError otherwise.
+    Multiple globs matching identical module(s) are OK.
     """
     files = set()
 
@@ -233,16 +236,25 @@ def generate_file_list(paths_dict, module_globs, include_executables=False):
         files.update(f"%{macro} {p}" for p in paths_dict["metadata"][f"{macro}s"])
 
     modules = paths_dict["modules"]
+    done_modules = set()
+    done_globs = set()
 
-    for name in modules:
-        for glob in module_globs:
+    for glob in module_globs:
+        for name in modules:
             if fnmatch.fnmatchcase(name, glob):
-                for module in modules[name]:
-                    if module["type"] == "package":
-                        files.update(f"{p}/" for p in module["files"])
-                    else:
-                        files.update(f"{p}" for p in module["files"])
-                break
+                if name not in done_modules:
+                    for module in modules[name]:
+                        if module["type"] == "package":
+                            files.update(f"{p}/" for p in module["files"])
+                        else:
+                            files.update(f"{p}" for p in module["files"])
+                    done_modules.add(name)
+                done_globs.add(glob)
+
+    missed = module_globs - done_globs
+    if missed:
+        missed_text = ", ".join(sorted(missed))
+        raise ValueError(f"Globs did not match any module: {missed_text}")
 
     return sorted(files)
 

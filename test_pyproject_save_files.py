@@ -94,12 +94,22 @@ def remove_executables(expected):
 @pytest.mark.parametrize("package, glob, expected", EXPECTED_FILES)
 def test_generate_file_list(package, glob, expected, include_executables):
     paths_dict = EXPECTED_DICT[package]
-    modules_glob = (glob,)
+    modules_glob = {glob}
     if not include_executables:
         expected = remove_executables(expected)
     tested = generate_file_list(paths_dict, modules_glob, include_executables)
 
     assert tested == expected
+
+
+def test_generate_file_list_unused_glob():
+    paths_dict = EXPECTED_DICT["kerberos"]
+    modules_glob = {"kerberos", "unused_glob1", "unused_glob2", "kerb*"}
+    with pytest.raises(ValueError) as excinfo:
+        generate_file_list(paths_dict, modules_glob, True)
+
+    assert "unused_glob1, unused_glob2" in str(excinfo.value)
+    assert "kerb" not in str(excinfo.value)
 
 
 @pytest.mark.parametrize(
@@ -223,4 +233,23 @@ def test_cli_bad_argument(tmp_path):
     )
 
     with pytest.raises(ArgumentError):
+        main(cli_args)
+
+
+def test_cli_bad_glob(tmp_path):
+    mock_root = create_root(tmp_path, TEST_RECORDS["tldr"], "test_RECORD_tldr")
+    pyproject_files_path = tmp_path / "files"
+    cli_args = argparser().parse_args(
+        [
+            str(pyproject_files_path),
+            str(mock_root),
+            str(SITELIB),
+            str(SITEARCH),
+            str(BINDIR),
+            "tldr*",
+            "you_cannot_have_this",
+        ]
+    )
+
+    with pytest.raises(ValueError):
         main(cli_args)
