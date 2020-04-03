@@ -267,7 +267,7 @@ def parse_varargs(varargs):
 
     Returns as set of globs, boolean flag whether to include executables from bindir
 
-    Raises ArgumentError for unknown flags
+    Raises ValueError for unknown flags
     """
     include_bindir = False
     globs = set()
@@ -277,7 +277,14 @@ def parse_varargs(varargs):
             if arg == "+bindir":
                 include_bindir = True
             else:
-                raise argparse.ArgumentError(None, f"Invalid argument: {arg}")
+                raise ValueError(f"Invalid argument: {arg}")
+        elif "." in arg:
+            top, *_ = arg.partition(".")
+            msg = (
+                f"Attempted to use a namespaced package with dot in the glob: {arg}. "
+                f"That is not (yet) supported. Use {top} instead and/or file a Bugzilla explaining your use case."
+            )
+            raise ValueError(msg)
         else:
             globs.add(arg)
 

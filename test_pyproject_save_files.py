@@ -3,7 +3,6 @@ import pytest
 import shutil
 import sys
 
-from argparse import ArgumentError
 from pathlib import Path
 from pprint import pprint
 
@@ -125,12 +124,23 @@ def test_parse_varargs_good(arguments, output):
 
 
 @pytest.mark.parametrize(
-    "arguments, first_bad", [(["+kinkdir"], 0), (["good", "+bad", "*ugly*"], 1)],
+    "arguments, wrong",
+    [
+        (["+kinkdir"], 0),
+        (["good", "+bad", "*ugly*"], 1),
+        (["+bad", "my.bad"], 0),
+        (["mod", "mod.*"], "mod"),
+        (["my.bad", "+bad"], "my"),
+    ],
 )
-def test_parse_varargs_bad(arguments, first_bad):
-    with pytest.raises(ArgumentError) as excinfo:
+def test_parse_varargs_bad(arguments, wrong):
+    with pytest.raises(ValueError) as excinfo:
         parse_varargs(arguments)
-    assert str(excinfo.value) == f"Invalid argument: {arguments[first_bad]}"
+    if isinstance(wrong, int):
+        assert str(excinfo.value) == f"Invalid argument: {arguments[wrong]}"
+    else:
+        assert str(excinfo.value).startswith("Attempted to use a namespaced package")
+        assert f" {wrong} " in str(excinfo.value)
 
 
 def create_root(tmp_path, record_path, rel_path_record):
@@ -232,11 +242,11 @@ def test_cli_bad_argument(tmp_path):
         ]
     )
 
-    with pytest.raises(ArgumentError):
+    with pytest.raises(ValueError):
         main(cli_args)
 
 
-def test_cli_bad_glob(tmp_path):
+def test_cli_bad_option(tmp_path):
     mock_root = create_root(tmp_path, TEST_RECORDS["tldr"], "test_RECORD_tldr")
     pyproject_files_path = tmp_path / "files"
     cli_args = argparser().parse_args(
@@ -248,6 +258,24 @@ def test_cli_bad_glob(tmp_path):
             str(BINDIR),
             "tldr*",
             "you_cannot_have_this",
+        ]
+    )
+
+    with pytest.raises(ValueError):
+        main(cli_args)
+
+
+def test_cli_bad_namespace(tmp_path):
+    mock_root = create_root(tmp_path, TEST_RECORDS["tldr"], "test_RECORD_tldr")
+    pyproject_files_path = tmp_path / "files"
+    cli_args = argparser().parse_args(
+        [
+            str(pyproject_files_path),
+            str(mock_root),
+            str(SITELIB),
+            str(SITEARCH),
+            str(BINDIR),
+            "tldr.didntread",
         ]
     )
 
