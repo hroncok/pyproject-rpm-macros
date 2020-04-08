@@ -1,7 +1,6 @@
 import json
 import pytest
 import shutil
-import sys
 
 from pathlib import Path
 from pprint import pprint
@@ -20,25 +19,6 @@ json_file = RECORDS / "pyproject_save_files_test_data.json"
 json_data = json.loads(json_file.read_text())
 EXPECTED_DICT = json_data["classified"]
 EXPECTED_FILES = json_data["dumped"]
-
-
-@pytest.fixture(autouse=True)
-def _fake_version(monkeypatch):
-    """
-    The test data are for Python 3.7.
-    We only support running this for 3.7 packages on 3.7 etc.
-    Hence in tests, we fake our version.
-    """
-
-    class version_info(tuple):
-        major = 3
-        minor = 7
-        patch = 100
-
-        def __new__(cls):
-            return super().__new__(cls, (3, 7, 100))
-
-    monkeypatch.setattr(sys, "version_info", version_info(), raising=True)
 
 
 def test_parse_record_kerberos():
@@ -176,6 +156,8 @@ def default_options(pyproject_files_path, mock_root):
         str(SITEARCH),
         "--bindir",
         str(BINDIR),
+        "--python-version",
+        "3.7",  # test data are for 3.7
     ]
 
 

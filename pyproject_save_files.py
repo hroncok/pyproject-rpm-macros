@@ -3,7 +3,6 @@ import csv
 import fnmatch
 import os
 import warnings
-import sys
 
 from collections import defaultdict
 from pathlib import PosixPath, PurePosixPath
@@ -120,7 +119,7 @@ def parse_record(record_path, record_content):
     return ((sitedir / row[0]).normpath() for row in record_content)
 
 
-def pycached(script):
+def pycached(script, python_version):
     """
     For a script BuildrootPath, return a list with that path and its bytecode glob.
     Like the %pycached macro.
@@ -128,8 +127,8 @@ def pycached(script):
     The glob is represented as a BuildrootPath.
     """
     assert script.suffix == ".py"
-    ver = sys.version_info
-    pycname = f"{script.stem}.cpython-{ver.major}{ver.minor}{{,.opt-?}}.pyc"
+    pyver = "".join(python_version.split(".")[:2])
+    pycname = f"{script.stem}.cpython-{pyver}{{,.opt-?}}.pyc"
     pyc = script.parent / "__pycache__" / pycname
     return [script, pyc]
 
@@ -149,7 +148,9 @@ def add_file_to_module(paths, module_name, module_type, *files):
         )
 
 
-def classify_paths(record_path, parsed_record_content, sitedirs, bindir):
+def classify_paths(
+    record_path, parsed_record_content, sitedirs, bindir, python_version
+):
     """
     For each BuildrootPath in parsed_record_content classify it to a dict structure
     that allows to filter the files for the %files section easier.
@@ -197,7 +198,9 @@ def classify_paths(record_path, parsed_record_content, sitedirs, bindir):
                         add_file_to_module(paths, name, "extension", path)
                     elif path.suffix == ".py":
                         name = path.stem
-                        add_file_to_module(paths, name, "script", *pycached(path))
+                        add_file_to_module(
+                            paths, name, "script", *pycached(path, python_version)
+                        )
                     else:
                         # TODO classify .pth files
                         warnings.warn(f"Unrecognized file: {path}")
@@ -291,7 +294,7 @@ def parse_varargs(varargs):
     return globs, include_bindir
 
 
-def pyproject_save_files(buildroot, sitelib, sitearch, bindir, varargs):
+def pyproject_save_files(buildroot, sitelib, sitearch, bindir, python_version, varargs):
     """
     Takes arguments from the %{pyproject_save_files} macro
 
@@ -306,7 +309,9 @@ def pyproject_save_files(buildroot, sitelib, sitearch, bindir, varargs):
     record_path = BuildrootPath.from_real(record_path_real, root=buildroot)
     parsed_record = parse_record(record_path, read_record(record_path_real))
 
-    paths_dict = classify_paths(record_path, parsed_record, sitedirs, bindir)
+    paths_dict = classify_paths(
+        record_path, parsed_record, sitedirs, bindir, python_version
+    )
     return generate_file_list(paths_dict, globs, include_bindir)
 
 
@@ -316,6 +321,7 @@ def main(cli_args):
         cli_args.sitelib,
         cli_args.sitearch,
         cli_args.bindir,
+        cli_args.python_version,
         cli_args.varargs,
     )
 
@@ -330,6 +336,7 @@ def argparser():
     r.add_argument("--sitelib", type=BuildrootPath, required=True)
     r.add_argument("--sitearch", type=BuildrootPath, required=True)
     r.add_argument("--bindir", type=BuildrootPath, required=True)
+    r.add_argument("--python-version", type=str, required=True)
     parser.add_argument("varargs", nargs="+")
     return parser
 
