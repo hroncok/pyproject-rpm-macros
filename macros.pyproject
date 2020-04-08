@@ -24,7 +24,13 @@ fi
 
 
 %pyproject_save_files() %{expand:\\\
-%{__python3} %{_rpmconfigdir}/redhat/pyproject_save_files.py %{pyproject_files} %{buildroot} %{python3_sitelib} %{python3_sitearch} %{_bindir} %{*}
+%{__python3} %{_rpmconfigdir}/redhat/pyproject_save_files.py \\
+  --output "%{pyproject_files}" \\
+  --buildroot "%{buildroot}" \\
+  --sitelib "%{python3_sitelib}" \\
+  --sitearch "%{python3_sitearch}" \\
+  --bindir "%{_bindir}" \\
+  %{*}
 }
 
 

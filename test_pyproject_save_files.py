@@ -172,10 +172,15 @@ def test_cli(tmp_path, package, glob, expected, include_executables):
     globs = [glob, "+bindir"] if include_executables else [glob]
     cli_args = argparser().parse_args(
         [
+            "--output",
             str(pyproject_files_path),
+            "--buildroot",
             str(mock_root),
+            "--sitelib",
             str(SITELIB),
+            "--sitearch",
             str(SITEARCH),
+            "--bindir",
             str(BINDIR),
             *globs,
         ]
@@ -195,10 +200,15 @@ def test_cli_not_find_RECORD(tmp_path):
     pyproject_files_path = tmp_path / "files"
     cli_args = argparser().parse_args(
         [
+            "--output",
             str(pyproject_files_path),
+            "--buildroot",
             str(mock_root),
+            "--sitelib",
             str(SITELIB),
+            "--sitearch",
             str(SITEARCH),
+            "--bindir",
             str(BINDIR),
             "tldr*",
         ]
@@ -214,10 +224,15 @@ def test_cli_find_too_many_RECORDS(tmp_path):
     pyproject_files_path = tmp_path / "files"
     cli_args = argparser().parse_args(
         [
+            "--output",
             str(pyproject_files_path),
+            "--buildroot",
             str(mock_root),
+            "--sitelib",
             str(SITELIB),
+            "--sitearch",
             str(SITEARCH),
+            "--bindir",
             str(BINDIR),
             "tldr*",
         ]
@@ -232,10 +247,15 @@ def test_cli_bad_argument(tmp_path):
     pyproject_files_path = tmp_path / "files"
     cli_args = argparser().parse_args(
         [
+            "--output",
             str(pyproject_files_path),
+            "--buildroot",
             str(mock_root),
+            "--sitelib",
             str(SITELIB),
+            "--sitearch",
             str(SITEARCH),
+            "--bindir",
             str(BINDIR),
             "tldr*",
             "+foodir",
@@ -251,10 +271,15 @@ def test_cli_bad_option(tmp_path):
     pyproject_files_path = tmp_path / "files"
     cli_args = argparser().parse_args(
         [
+            "--output",
             str(pyproject_files_path),
+            "--buildroot",
             str(mock_root),
+            "--sitelib",
             str(SITELIB),
+            "--sitearch",
             str(SITEARCH),
+            "--bindir",
             str(BINDIR),
             "tldr*",
             "you_cannot_have_this",
@@ -270,10 +295,15 @@ def test_cli_bad_namespace(tmp_path):
     pyproject_files_path = tmp_path / "files"
     cli_args = argparser().parse_args(
         [
+            "--output",
             str(pyproject_files_path),
+            "--buildroot",
             str(mock_root),
+            "--sitelib",
             str(SITELIB),
+            "--sitearch",
             str(SITEARCH),
+            "--bindir",
             str(BINDIR),
             "tldr.didntread",
         ]

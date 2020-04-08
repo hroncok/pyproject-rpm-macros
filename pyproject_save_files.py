@@ -319,18 +319,19 @@ def main(cli_args):
         cli_args.varargs,
     )
 
-    cli_args.path_to_save.write_text("\n".join(file_section) + "\n", encoding="utf-8")
+    cli_args.output.write_text("\n".join(file_section) + "\n", encoding="utf-8")
 
 
 def argparser():
-    p = argparse.ArgumentParser()
-    p.add_argument("path_to_save", type=PosixPath)
-    p.add_argument("buildroot", type=PosixPath)
-    p.add_argument("sitelib", type=BuildrootPath)
-    p.add_argument("sitearch", type=BuildrootPath)
-    p.add_argument("bindir", type=BuildrootPath)
-    p.add_argument("varargs", nargs="+")
-    return p
+    parser = argparse.ArgumentParser()
+    r = parser.add_argument_group("required arguments")
+    r.add_argument("--output", type=PosixPath, required=True)
+    r.add_argument("--buildroot", type=PosixPath, required=True)
+    r.add_argument("--sitelib", type=BuildrootPath, required=True)
+    r.add_argument("--sitearch", type=BuildrootPath, required=True)
+    r.add_argument("--bindir", type=BuildrootPath, required=True)
+    parser.add_argument("varargs", nargs="+")
+    return parser
 
 
 if __name__ == "__main__":
