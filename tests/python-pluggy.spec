@@ -22,7 +22,6 @@ Building this tests:
 
 %package -n python3-%{pypi_name}
 Summary:        %{summary}
-%{?python_provide:%python_provide python3-%{pypi_name}}
 
 %description -n python3-%{pypi_name}
 %{summary}.
@@ -42,7 +41,7 @@ Summary:        %{summary}
 
 %install
 %pyproject_install
-# There are no executables but this still works
+# There are no executables, but we are allowed to pass +bindir anyway
 %pyproject_save_files pluggy +bindir
 
 

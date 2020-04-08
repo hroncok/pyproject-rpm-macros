@@ -17,7 +17,8 @@ BuildRequires:  pyproject-rpm-macros
 BuildRequires:  python3-Cython
 
 %description
-This package contains an extension module. Does not contain pyproject.toml. Has a script (.py) and extension (.so) with the same name.
+This package contains an extension module. Does not contain pyproject.toml.
+Has a script (.py) and extension (.so) with identical name.
 Building this tests:
 - installing both a script and an extension with the same name
 - default build backend without pyproject.toml
@@ -25,31 +26,34 @@ Building this tests:
 
 %package -n python3-mistune
 Summary:        %summary
-%{?python_provide:%python_provide python3-mistune}
 
 %description -n python3-mistune
 %{summary}
 
+
 %prep
 %autosetup -n mistune-%{version}
+
 
 %generate_buildrequires
 %pyproject_buildrequires
 
+
 %build
 %pyproject_wheel
+
 
 %install
 %pyproject_install
 %pyproject_save_files mistune
 
+
 %check
+# Internal check for our macros
 # making sure that pyproject_install outputs these files so that we can test behaviour of %%pyproject_save_files
 # when a package has multiple files with the same name (here script and extension)
-test -f "%{buildroot}%{python3_sitearch}/mistune.py" 
-test -d "%{buildroot}%{python3_sitearch}/__pycache__/" 
-test -n "$(find '%{buildroot}%{python3_sitearch}' -maxdepth 1 -name 'mistune.cpython-*.so' -print -quit)" 
-test -d "%{buildroot}%{python3_sitearch}/mistune-%{version}.dist-info/" 
+test -f %{buildroot}%{python3_sitearch}/mistune.py
+test -f %{buildroot}%{python3_sitearch}/mistune.cpython-*.so
 
 
 %files -n python3-mistune -f %{pyproject_files}

@@ -14,9 +14,9 @@ BuildRequires:  pyproject-rpm-macros
 %description
 This package uses tox.ini file with recursive deps (via the -r option).
 
+
 %package -n python3-%{pypi_name}
 Summary:        %{summary}
-%{?python_provide:%python_provide python3-%{pypi_name}}
 
 %description -n python3-%{pypi_name}
 %{summary}.
@@ -26,23 +26,27 @@ Summary:        %{summary}
 %autosetup -p1 -n %{pypi_name}-%{version}
 # setuptools-git is needed to build the source distribution, but not
 # for packaging, which *starts* from the source distribution
+# we sed it out to save ourselves a dependency, but that is not strictly required
 sed -i -e 's., "setuptools-git"..g' pyproject.toml
+
 
 %generate_buildrequires
 %pyproject_buildrequires -t
 
+
 %build
 %pyproject_wheel
 
+
 %install
 %pyproject_install
+%pyproject_save_files %{pypi_name}
+
 
 %check
 %tox
 
 
-%files -n python3-%{pypi_name}
+%files -n python3-%{pypi_name} -f %{pyproject_files}
 %doc README.*
 %license COPYING
-%{python3_sitelib}/%{pypi_name}/
-%{python3_sitelib}/%{pypi_name}-%{version}.dist-info/

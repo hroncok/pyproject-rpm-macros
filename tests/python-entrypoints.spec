@@ -12,17 +12,15 @@ BuildRequires:  pyproject-rpm-macros
 
 %description
 This package contains one .py module
-Building this tests:
-- the flit build backend
-- the %%{python3_sitelib}/__pycache__ directory is not listed in %%pyproject_files
+Building this tests the flit build backend.
 
 
 %package -n python3-%{pypi_name}
 Summary:        %{summary}
-%{?python_provide:%python_provide python3-%{pypi_name}}
 
 %description -n python3-%{pypi_name}
 %{summary}.
+
 
 %prep
 %autosetup -p1 -n %{pypi_name}-%{version}
@@ -39,6 +37,14 @@ Summary:        %{summary}
 %install
 %pyproject_install
 %pyproject_save_files entrypoints
+
+
+%check
+# Internal check: Top level __pycache__ is never owned
+grep -vE '/__pycache__$' %{pyproject_files}
+grep -vE '/__pycache__/$' %{pyproject_files}
+grep -F '/__pycache__/' %{pyproject_files}
+
 
 %files -n python3-%{pypi_name} -f %{pyproject_files}
 %doc README.rst

@@ -30,12 +30,12 @@ Building this tests:
 %pyproject_save_files tldr +bindir
 
 %check
+# Internal check for our macros: tests we don't ship __pycache__ in bindir
 test ! -d %{buildroot}%{_bindir}/__pycache__
 
-# tests if we get a proper shebang line
-head -n1 %{buildroot}%{_bindir}/%{name}.py | egrep '#!\s*%{python3}\s+%{py3_shbang_opts}\s*$'
+# Internal check for our macros: tests we have a proper shebang line
+head -n1 %{buildroot}%{_bindir}/%{name}.py | grep -E '#!\s*%{python3}\s+%{py3_shbang_opts}\s*$'
 
 %files -f %pyproject_files
 %license LICENSE
 %doc README.md
-
