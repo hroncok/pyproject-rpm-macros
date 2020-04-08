@@ -91,7 +91,7 @@ install -m 644 pyproject_save_files.py  %{buildroot}%{_rpmconfigdir}/redhat/
 
 %if %{with tests}
 %check
-%{__python3} -m pytest -vv
+%{python3} -m pytest -vv --doctest-modules
 %endif
 
 
