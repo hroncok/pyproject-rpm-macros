@@ -164,6 +164,21 @@ def create_root(tmp_path, record_path, rel_path_record):
     return tmp_path / buildroot
 
 
+def default_options(pyproject_files_path, mock_root):
+    return [
+        "--output",
+        str(pyproject_files_path),
+        "--buildroot",
+        str(mock_root),
+        "--sitelib",
+        str(SITELIB),
+        "--sitearch",
+        str(SITEARCH),
+        "--bindir",
+        str(BINDIR),
+    ]
+
+
 @pytest.mark.parametrize("include_executables", (True, False))
 @pytest.mark.parametrize("package, glob, expected", EXPECTED_FILES)
 def test_cli(tmp_path, package, glob, expected, include_executables):
@@ -171,19 +186,7 @@ def test_cli(tmp_path, package, glob, expected, include_executables):
     pyproject_files_path = tmp_path / "files"
     globs = [glob, "+bindir"] if include_executables else [glob]
     cli_args = argparser().parse_args(
-        [
-            "--output",
-            str(pyproject_files_path),
-            "--buildroot",
-            str(mock_root),
-            "--sitelib",
-            str(SITELIB),
-            "--sitearch",
-            str(SITEARCH),
-            "--bindir",
-            str(BINDIR),
-            *globs,
-        ]
+        [*default_options(pyproject_files_path, mock_root), *globs]
     )
     main(cli_args)
 
@@ -199,19 +202,7 @@ def test_cli_not_find_RECORD(tmp_path):
     )
     pyproject_files_path = tmp_path / "files"
     cli_args = argparser().parse_args(
-        [
-            "--output",
-            str(pyproject_files_path),
-            "--buildroot",
-            str(mock_root),
-            "--sitelib",
-            str(SITELIB),
-            "--sitearch",
-            str(SITEARCH),
-            "--bindir",
-            str(BINDIR),
-            "tldr*",
-        ]
+        [*default_options(pyproject_files_path, mock_root), "tldr*"]
     )
 
     with pytest.raises(FileNotFoundError):
@@ -223,19 +214,7 @@ def test_cli_find_too_many_RECORDS(tmp_path):
     create_root(tmp_path, TEST_RECORDS["tensorflow"], "test_RECORD_tensorflow")
     pyproject_files_path = tmp_path / "files"
     cli_args = argparser().parse_args(
-        [
-            "--output",
-            str(pyproject_files_path),
-            "--buildroot",
-            str(mock_root),
-            "--sitelib",
-            str(SITELIB),
-            "--sitearch",
-            str(SITEARCH),
-            "--bindir",
-            str(BINDIR),
-            "tldr*",
-        ]
+        [*default_options(pyproject_files_path, mock_root), "tldr*"]
     )
 
     with pytest.raises(FileExistsError):
@@ -246,20 +225,7 @@ def test_cli_bad_argument(tmp_path):
     mock_root = create_root(tmp_path, TEST_RECORDS["tldr"], "test_RECORD_tldr")
     pyproject_files_path = tmp_path / "files"
     cli_args = argparser().parse_args(
-        [
-            "--output",
-            str(pyproject_files_path),
-            "--buildroot",
-            str(mock_root),
-            "--sitelib",
-            str(SITELIB),
-            "--sitearch",
-            str(SITEARCH),
-            "--bindir",
-            str(BINDIR),
-            "tldr*",
-            "+foodir",
-        ]
+        [*default_options(pyproject_files_path, mock_root), "tldr*", "+foodir"]
     )
 
     with pytest.raises(ValueError):
@@ -271,16 +237,7 @@ def test_cli_bad_option(tmp_path):
     pyproject_files_path = tmp_path / "files"
     cli_args = argparser().parse_args(
         [
-            "--output",
-            str(pyproject_files_path),
-            "--buildroot",
-            str(mock_root),
-            "--sitelib",
-            str(SITELIB),
-            "--sitearch",
-            str(SITEARCH),
-            "--bindir",
-            str(BINDIR),
+            *default_options(pyproject_files_path, mock_root),
             "tldr*",
             "you_cannot_have_this",
         ]
@@ -294,19 +251,7 @@ def test_cli_bad_namespace(tmp_path):
     mock_root = create_root(tmp_path, TEST_RECORDS["tldr"], "test_RECORD_tldr")
     pyproject_files_path = tmp_path / "files"
     cli_args = argparser().parse_args(
-        [
-            "--output",
-            str(pyproject_files_path),
-            "--buildroot",
-            str(mock_root),
-            "--sitelib",
-            str(SITELIB),
-            "--sitearch",
-            str(SITEARCH),
-            "--bindir",
-            str(BINDIR),
-            "tldr.didntread",
-        ]
+        [*default_options(pyproject_files_path, mock_root), "tldr.didntread"]
     )
 
     with pytest.raises(ValueError):
