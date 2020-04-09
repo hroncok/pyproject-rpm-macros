@@ -86,6 +86,16 @@ def read_record(record_path):
 
     The triplet is str-path, hash, size -- the last two optional.
     We will later care only for the paths anyway.
+
+    Example:
+
+        >>> g = read_record(PosixPath('./test_RECORD_tldr'))
+        >>> next(g)
+        ['../../../bin/__pycache__/tldr.cpython-....pyc', '', '']
+        >>> next(g)
+        ['../../../bin/tldr', 'sha256=...', '12766']
+        >>> next(g)
+        ['../../../bin/tldr.py', 'sha256=...', '12766']
     """
     with open(record_path, newline="", encoding="utf-8") as f:
         yield from csv.reader(
@@ -125,6 +135,14 @@ def pycached(script, python_version):
     Like the %pycached macro.
 
     The glob is represented as a BuildrootPath.
+
+    Examples:
+
+        >>> pycached(BuildrootPath('/whatever/bar.py'), '3.8')
+        [BuildrootPath('/whatever/bar.py'), BuildrootPath('/whatever/__pycache__/bar.cpython-38{,.opt-?}.pyc')]
+
+        >>> pycached(BuildrootPath('/opt/python3.10/foo.py'), '3.10')
+        [BuildrootPath('/opt/python3.10/foo.py'), BuildrootPath('/opt/python3.10/__pycache__/foo.cpython-310{,.opt-?}.pyc')]
     """
     assert script.suffix == ".py"
     pyver = "".join(python_version.split(".")[:2])
@@ -270,7 +288,54 @@ def parse_varargs(varargs):
 
     Returns as set of globs, boolean flag whether to include executables from bindir
 
-    Raises ValueError for unknown flags
+    Raises ValueError for unknown flags and globs with dots (namespace packages).
+
+    Good examples:
+
+        >>> parse_varargs(['*'])
+        ({'*'}, False)
+
+        >>> mods, bindir = parse_varargs(['requests*', 'kerberos', '+bindir'])
+        >>> bindir
+        True
+        >>> sorted(mods)
+        ['kerberos', 'requests*']
+
+        >>> mods, bindir = parse_varargs(['tldr', 'tensorf*'])
+        >>> bindir
+        False
+        >>> sorted(mods)
+        ['tensorf*', 'tldr']
+
+        >>> parse_varargs(['+bindir'])
+        (set(), True)
+
+    Bad examples:
+
+        >>> parse_varargs(['+kinkdir'])
+        Traceback (most recent call last):
+          ...
+        ValueError: Invalid argument: +kinkdir
+
+        >>> parse_varargs(['good', '+bad', '*ugly*'])
+        Traceback (most recent call last):
+          ...
+        ValueError: Invalid argument: +bad
+
+        >>> parse_varargs(['+bad', 'my.bad'])
+        Traceback (most recent call last):
+          ...
+        ValueError: Invalid argument: +bad
+
+        >>> parse_varargs(['mod', 'mod.*'])
+        Traceback (most recent call last):
+          ...
+        ValueError: Attempted to use a namespaced package with dot in the glob: mod.*. ...
+
+        >>> parse_varargs(['my.bad', '+bad'])
+        Traceback (most recent call last):
+          ...
+        ValueError: Attempted to use a namespaced package with dot in the glob: my.bad. ...
     """
     include_bindir = False
     globs = set()

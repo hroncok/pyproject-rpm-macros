@@ -6,7 +6,7 @@ from pathlib import Path
 from pprint import pprint
 
 from pyproject_save_files import argparser, generate_file_list, main
-from pyproject_save_files import parse_varargs, parse_record, read_record
+from pyproject_save_files import parse_record, read_record
 from pyproject_save_files import BuildrootPath
 
 
@@ -89,38 +89,6 @@ def test_generate_file_list_unused_glob():
 
     assert "unused_glob1, unused_glob2" in str(excinfo.value)
     assert "kerb" not in str(excinfo.value)
-
-
-@pytest.mark.parametrize(
-    "arguments, output",
-    [
-        (["requests*", "kerberos", "+bindir"], ({"requests*", "kerberos"}, True)),
-        (["tldr", "tensorf*"], ({"tldr", "tensorf*"}, False)),
-        (["+bindir"], (set(), True)),
-    ],
-)
-def test_parse_varargs_good(arguments, output):
-    assert parse_varargs(arguments) == output
-
-
-@pytest.mark.parametrize(
-    "arguments, wrong",
-    [
-        (["+kinkdir"], 0),
-        (["good", "+bad", "*ugly*"], 1),
-        (["+bad", "my.bad"], 0),
-        (["mod", "mod.*"], "mod"),
-        (["my.bad", "+bad"], "my"),
-    ],
-)
-def test_parse_varargs_bad(arguments, wrong):
-    with pytest.raises(ValueError) as excinfo:
-        parse_varargs(arguments)
-    if isinstance(wrong, int):
-        assert str(excinfo.value) == f"Invalid argument: {arguments[wrong]}"
-    else:
-        assert str(excinfo.value).startswith("Attempted to use a namespaced package")
-        assert f" {wrong} " in str(excinfo.value)
 
 
 def create_root(tmp_path, record_path, rel_path_record):
