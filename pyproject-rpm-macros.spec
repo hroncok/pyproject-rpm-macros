@@ -100,7 +100,7 @@ install -m 644 pyproject_save_files.py  %{buildroot}%{_rpmconfigdir}/redhat/
 %license LICENSE
 
 %changelog
-* Fri Mar 13 2020 Patrik Kopkan <pkopkan@redhat.com> - 0-14
+* Thu Apr 09 2020 Patrik Kopkan <pkopkan@redhat.com> - 0-14
 - add %%pyproject_save_file macro for generating file section
 
 * Mon Mar 02 2020 Miro Hrončok <mhroncok@redhat.com> - 0-13
