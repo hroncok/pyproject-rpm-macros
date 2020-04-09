@@ -21,12 +21,8 @@ Source202:      test_pyproject_save_files.py
 
 # Test data
 Source301:      pyproject_buildrequires_testcases.yaml
-Source302:      pyproject_save_files_test_data.json
-Source303:      test_RECORD_kerberos
-Source304:      test_RECORD_mistune
-Source305:      test_RECORD_requests
-Source306:      test_RECORD_tensorflow
-Source307:      test_RECORD_tldr
+Source302:      pyproject_save_files_test_data.yaml
+Source303:      test_RECORD
 
 # Metadata
 Source901:      README.md

@@ -1,6 +1,5 @@
-import json
 import pytest
-import shutil
+import yaml
 
 from pathlib import Path
 from pprint import pprint
@@ -10,29 +9,35 @@ from pyproject_save_files import parse_record, read_record
 from pyproject_save_files import BuildrootPath
 
 
-RECORDS = Path(__file__).parent
+DIR = Path(__file__).parent
 BINDIR = BuildrootPath("/usr/bin")
 SITELIB = BuildrootPath("/usr/lib/python3.7/site-packages")
 SITEARCH = BuildrootPath("/usr/lib64/python3.7/site-packages")
 
-json_file = RECORDS / "pyproject_save_files_test_data.json"
-json_data = json.loads(json_file.read_text())
-EXPECTED_DICT = json_data["classified"]
-EXPECTED_FILES = json_data["dumped"]
+yaml_file = DIR / "pyproject_save_files_test_data.yaml"
+yaml_data = yaml.safe_load(yaml_file.read_text())
+EXPECTED_DICT = yaml_data["classified"]
+EXPECTED_FILES = yaml_data["dumped"]
+TEST_RECORDS = yaml_data["records"]
 
 
-def test_parse_record_kerberos():
-    record_path = SITEARCH / "kerberos-1.3.0.dist-info/RECORD"
-    record_content = read_record(RECORDS / "test_RECORD_kerberos")
+def test_parse_record_tldr():
+    record_path = BuildrootPath(TEST_RECORDS["tldr"]["path"])
+    record_content = read_record(DIR / "test_RECORD")
     output = list(parse_record(record_path, record_content))
     pprint(output)
     expected = [
-        SITEARCH / "kerberos-1.3.0.dist-info/INSTALLER",
-        SITEARCH / "kerberos-1.3.0.dist-info/METADATA",
-        SITEARCH / "kerberos-1.3.0.dist-info/RECORD",
-        SITEARCH / "kerberos-1.3.0.dist-info/WHEEL",
-        SITEARCH / "kerberos-1.3.0.dist-info/top_level.txt",
-        SITEARCH / "kerberos.cpython-37m-x86_64-linux-gnu.so",
+        BINDIR / "__pycache__/tldr.cpython-37.pyc",
+        BINDIR / "tldr",
+        BINDIR / "tldr.py",
+        SITELIB / "__pycache__/tldr.cpython-37.pyc",
+        SITELIB / "tldr-0.5.dist-info/INSTALLER",
+        SITELIB / "tldr-0.5.dist-info/LICENSE",
+        SITELIB / "tldr-0.5.dist-info/METADATA",
+        SITELIB / "tldr-0.5.dist-info/RECORD",
+        SITELIB / "tldr-0.5.dist-info/WHEEL",
+        SITELIB / "tldr-0.5.dist-info/top_level.txt",
+        SITELIB / "tldr.py",
     ]
     assert output == expected
 
@@ -53,16 +58,6 @@ def test_parse_record_tensorflow():
         SITEARCH / "tensorflow-2.1.0.dist-info/METADATA",
     ]
     assert output == expected
-
-
-# packagename: expected path in buildroot
-TEST_RECORDS = {
-    "kerberos": SITEARCH / "kerberos-1.3.0.dist-info/RECORD",
-    "requests": SITELIB / "requests-2.22.0.dist-info/RECORD",
-    "tensorflow": SITEARCH / "tensorflow-2.1.0.dist-info/RECORD",
-    "tldr": SITELIB / "tldr-0.5.dist-info/RECORD",
-    "mistune": SITEARCH / "mistune-0.8.3.dist-info/RECORD",
-}
 
 
 def remove_executables(expected):
@@ -91,7 +86,7 @@ def test_generate_file_list_unused_glob():
     assert "kerb" not in str(excinfo.value)
 
 
-def create_root(tmp_path, record_path, rel_path_record):
+def create_root(tmp_path, record_path, record_content):
     """create mock buildroot in tmp_path
 
     parameters:
@@ -100,15 +95,14 @@ def create_root(tmp_path, record_path, rel_path_record):
     rel_path_record: relative path to test RECORD file
 
     example:
-    create_root(Path('tmp'), '/usr/lib/python/tldr-0.5.dist-info/RECORD', 'test_RECORD_tldr')
+    create_root(Path('tmp'), '/usr/lib/python/tldr-0.5.dist-info/RECORD', '../../../bin/__pycache__/tldr.cpython-37.pyc,,\n...')
     -> copy RECORD file and creates subdirectories in 'tmp/buildroot/usr/lib/python/tldr-0.5.dist-info/RECORD'
     """
 
-    src = RECORDS / rel_path_record
     buildroot = tmp_path / "buildroot"
-    dest = buildroot / record_path.relative_to("/")
+    dest = buildroot / Path(record_path).relative_to("/")
     dest.parent.mkdir(parents=True)
-    shutil.copy(src, dest)
+    dest.write_text(record_content)
     return tmp_path / buildroot
 
 
@@ -132,7 +126,9 @@ def default_options(pyproject_files_path, mock_root):
 @pytest.mark.parametrize("include_executables", (True, False))
 @pytest.mark.parametrize("package, glob, expected", EXPECTED_FILES)
 def test_cli(tmp_path, package, glob, expected, include_executables):
-    mock_root = create_root(tmp_path, TEST_RECORDS[package], f"test_RECORD_{package}")
+    mock_root = create_root(
+        tmp_path, TEST_RECORDS[package]["path"], TEST_RECORDS[package]["content"]
+    )
     pyproject_files_path = tmp_path / "files"
     globs = [glob, "+bindir"] if include_executables else [glob]
     cli_args = argparser().parse_args(
@@ -148,7 +144,7 @@ def test_cli(tmp_path, package, glob, expected, include_executables):
 
 def test_cli_not_find_RECORD(tmp_path):
     mock_root = create_root(
-        tmp_path, BuildrootPath("/usr/lib/RECORD"), "test_RECORD_tldr"
+        tmp_path, BuildrootPath("/usr/lib/RECORD"), TEST_RECORDS["tldr"]["content"]
     )
     pyproject_files_path = tmp_path / "files"
     cli_args = argparser().parse_args(
@@ -160,8 +156,14 @@ def test_cli_not_find_RECORD(tmp_path):
 
 
 def test_cli_find_too_many_RECORDS(tmp_path):
-    mock_root = create_root(tmp_path, TEST_RECORDS["tldr"], "test_RECORD_tldr")
-    create_root(tmp_path, TEST_RECORDS["tensorflow"], "test_RECORD_tensorflow")
+    mock_root = create_root(
+        tmp_path, TEST_RECORDS["tldr"]["path"], TEST_RECORDS["tldr"]["content"]
+    )
+    create_root(
+        tmp_path,
+        TEST_RECORDS["tensorflow"]["path"],
+        TEST_RECORDS["tensorflow"]["content"],
+    )
     pyproject_files_path = tmp_path / "files"
     cli_args = argparser().parse_args(
         [*default_options(pyproject_files_path, mock_root), "tldr*"]
@@ -172,7 +174,9 @@ def test_cli_find_too_many_RECORDS(tmp_path):
 
 
 def test_cli_bad_argument(tmp_path):
-    mock_root = create_root(tmp_path, TEST_RECORDS["tldr"], "test_RECORD_tldr")
+    mock_root = create_root(
+        tmp_path, TEST_RECORDS["tldr"]["path"], TEST_RECORDS["tldr"]["content"]
+    )
     pyproject_files_path = tmp_path / "files"
     cli_args = argparser().parse_args(
         [*default_options(pyproject_files_path, mock_root), "tldr*", "+foodir"]
@@ -183,7 +187,9 @@ def test_cli_bad_argument(tmp_path):
 
 
 def test_cli_bad_option(tmp_path):
-    mock_root = create_root(tmp_path, TEST_RECORDS["tldr"], "test_RECORD_tldr")
+    mock_root = create_root(
+        tmp_path, TEST_RECORDS["tldr"]["path"], TEST_RECORDS["tldr"]["content"]
+    )
     pyproject_files_path = tmp_path / "files"
     cli_args = argparser().parse_args(
         [
@@ -198,7 +204,9 @@ def test_cli_bad_option(tmp_path):
 
 
 def test_cli_bad_namespace(tmp_path):
-    mock_root = create_root(tmp_path, TEST_RECORDS["tldr"], "test_RECORD_tldr")
+    mock_root = create_root(
+        tmp_path, TEST_RECORDS["tldr"]["path"], TEST_RECORDS["tldr"]["content"]
+    )
     pyproject_files_path = tmp_path / "files"
     cli_args = argparser().parse_args(
         [*default_options(pyproject_files_path, mock_root), "tldr.didntread"]

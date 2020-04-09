@@ -89,7 +89,7 @@ def read_record(record_path):
 
     Example:
 
-        >>> g = read_record(PosixPath('./test_RECORD_tldr'))
+        >>> g = read_record(PosixPath('./test_RECORD'))
         >>> next(g)
         ['../../../bin/__pycache__/tldr.cpython-....pyc', '', '']
         >>> next(g)
